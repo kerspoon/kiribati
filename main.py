@@ -81,4 +81,21 @@ def run(network_file_name,num_base_cases,num_samples):
             infoline = [count] + list(result) + [len(fails)] + list(fails)
             csv_print(infoline)
 
-run("rts.net",1,10000)
+
+# run("rts.net",1,10000)
+
+def main ():
+    from optparse import OptionParser
+
+    parser = OptionParser("e.g. python main.py rts.net 100 1000000", 
+                          version="1-Oct-09 by James Brooks")
+    (options, args) = parser.parse_args()
+
+    if len(args) != 3:
+        parser.error("expected 3 arguments got " + str(len(args)))
+
+    retval = run(args[0], int(args[1]), int(args[2]))
+    sys.exit(retval)
+
+if __name__ == "__main__":
+    main()
