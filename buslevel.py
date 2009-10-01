@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
 from modifiedtestcase import *
+import random
+
 # http://www.ee.washington.edu/research/pstca/rts/rts96/
 
 weekly = [86.2, 90.0, 87.8, 83.4, 88.0, 84.1, 83.2, 80.6, 74.0, 73.7, 71.5, 72.7, 70.4, 75.0, 72.1, 80.0, 75.4, 83.7, 87.0, 88.0, 85.6, 81.1, 90.0, 88.7, 89.6, 86.1, 75.5, 81.6, 80.1, 88.0, 72.2, 77.6, 80.0, 72.9, 72.6, 70.5, 78.0, 69.5, 72.4, 72.4, 74.3, 74.4, 80.0, 88.1, 88.5, 90.9, 94.0, 89.0, 94.2, 97.0, 100.0, 95.2]
@@ -66,8 +68,7 @@ hourly = dict(
     autumn = hourly_autumn,
     winter = hourly_winter)
 
-
-def peak_load(week, day, hour):
+def forecast_load(week, day, hour):
     """returns the peak load as a percentage of annual value"""
     assert 0 <= week <= 51
     assert 0 <= hour <= 23
@@ -75,8 +76,52 @@ def peak_load(week, day, hour):
     m2 = daily[day]
     m3 = hourly[season(week)][weektype(day)][hour]
     m = (m1 * m2 * m3) / (100.0 * 100.0 * 100.0)
-    print m1, m2, m3, m 
+    # print m1, m2, m3, m 
     return m
+
+def actual_load(week, day, hour):
+    mu = forecast_load(week, day, hour)
+    sigma = mu * 0.05
+    load_level = random.normalvariate(mu, sigma)
+    return load_level
+
+def actual_load2(forecast):
+    mu = forecast
+    sigma = mu * 0.05
+    load_level = random.normalvariate(mu, sigma)
+    return load_level
+
+# randint(self, a, b)  Return random integer in range [a, b], including both end points.
+
+def random_day():
+    return random.choice(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+
+def random_week():
+    return random.randint(0,51)
+
+def random_hour():
+    return random.randint(0,23)
+
+def examples():
+    def inner(forecast):
+        print "forecast", forecast
+        for x in range(10):
+            print "actual", x, "=", actual_load2(forecast)
+        print 
+    inner(forecast_load(0, "Monday", 0))
+    inner(forecast_load(0, "Sunday", 0))
+    inner(forecast_load(51, "Sunday", 23))
+    inner(forecast_load(37, "Tuesday", 12))
+    inner(forecast_load(37, "Sunday", 5)) # probably lowest
+    inner(forecast_load(50, "Tuesday", 17)) # probably highest
+    
+    print "-----"
+    print
+
+    act = [actual_load2(1.0) for x in range(10000)]
+    print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act) 
+    print act[:20]
+
 
 class Tester_Weekstuff(ModifiedTestCase):
     def test_weektype(self):
@@ -123,11 +168,11 @@ class Tester_Weekstuff(ModifiedTestCase):
             self.assertEqual(winter(x), True)
 
     def test_peak_load(self):
-        self.assertAlmostEqual(peak_load(0, "Monday", 0), 0.537, 3)
-        self.assertAlmostEqual(peak_load(0, "Sunday", 0), 0.504, 3)
-        self.assertAlmostEqual(peak_load(51, "Sunday", 23), 0.578, 3)
-        self.assertAlmostEqual(peak_load(37, "Tuesday", 12), 0.646, 3)
+        self.assertAlmostEqual(forecast_load(0, "Monday", 0), 0.537, 3)
+        self.assertAlmostEqual(forecast_load(0, "Sunday", 0), 0.504, 3)
+        self.assertAlmostEqual(forecast_load(51, "Sunday", 23), 0.578, 3)
+        self.assertAlmostEqual(forecast_load(37, "Tuesday", 12), 0.646, 3)
 
 if __name__ == '__main__':
+    examples()
     unittest.main()
-
