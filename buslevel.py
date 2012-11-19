@@ -102,6 +102,9 @@ def random_week():
 def random_hour():
     return random.randint(0,23)
 
+def random_bus_forecast():
+    return forecast_load(random_week(),random_day(),random_hour())
+
 def examples():
     def inner(forecast):
         print "forecast", forecast
@@ -114,13 +117,29 @@ def examples():
     inner(forecast_load(37, "Tuesday", 12))
     inner(forecast_load(37, "Sunday", 5)) # probably lowest
     inner(forecast_load(50, "Tuesday", 17)) # probably highest
+
+    for x in range(3):
+        inner(forecast_load(random_week(),random_day(),random_hour()))
     
     print "-----"
-    print
-
-    act = [actual_load2(1.0) for x in range(10000)]
+    act = [forecast_load(random_week(),random_day(),random_hour()) for x in range(10000)]
+    print "Random Forecast"
     print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act) 
     print act[:20]
+
+    print "-----"
+    act = [actual_load(random_week(),random_day(),random_hour()) for x in range(10000)]
+    print "Random Actual"
+    print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act) 
+    print act[:20]
+
+    print "-----"
+    act = [actual_load2(1.0) for x in range(10000)]
+    print "Normal Distribution"
+    print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act) 
+    print act[:20]
+
+    print "-----"
 
 
 class Tester_Weekstuff(ModifiedTestCase):

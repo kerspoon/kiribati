@@ -36,6 +36,8 @@ class Loadflow(object):
                 branchname = row[1].strip()
                 self.branches[branchname] = row
 
+
+
 def lfgenerator(lf, output, killlist):
     """from the loadflow kill everything in the killlist 
     and save resulting loadlow to writer. lf is the baseloadflow"""
@@ -167,7 +169,7 @@ def readlimits(limitsfile):
         else:
             raise "expected 'line' got '" + row[0] + "'"
 
-    return (busbar , line)
+    return (busbar, line)
 
 def cleanup_output(infile):
     skiplines(infile,5)

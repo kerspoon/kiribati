@@ -1,0 +1,44 @@
+
+class Loadflow:
+    filename = String
+    busbars  = dict(bus-name, bus-row)
+    branches = dict(branch-name, branch-row)
+    where:
+        bus-name = branch-name = string
+        bus-row = csv(type, zone, name, pg, qg, vm, va, pl,ql, qmin, qmax, slope )
+        branch-row = csv(Type, Code, Zone1, Zone2, Bus1, Bus2, Circuit, R, X, B, Ratio, Phase, Sr, Control, MinTap, MaxTap, TapStep)
+
+class Scenario:
+    id = String
+    base = Loadflow | Loadflow.filename
+    outages = set(bus-name | branch-name)
+    load-level = float[0, inf]
+    gen-level = dict(gen-name, float[0, inf])
+    where:
+        gen-name = string
+
+class Scenario-Sample:
+    """doesn't matter what the base is for simulation
+       it's values are taken into account in the sample"""
+
+    base = Scenario | Scenario.id
+    failures = set(bus-name | branch-name)
+    load-level = float[0, inf]
+    gen-level = dict(gen-name, float[0, inf])
+    
+----------------------------------------------------
+
+[Scenario] sc-001 rts.lf
+    G12, A1, B6
+    1.043
+    1, 1, 0.95, 0.5, 1.2 ...
+
+[Scenario-Sample] ss-001 sc-001
+    G32, AB7
+    0.99
+    1, 1, 0.95, 0.5, 1.2 ...
+    result
+
+
+
+  

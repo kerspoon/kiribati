@@ -81,7 +81,7 @@ def read_bus(line):
 # read :: file_handler -> dict(name = probability)
 #         name ::= str
 #         probability ::= (real(0,1),real(0,1))
-def read (infile):
+def read(infile):
     """processes a file into name, probability for 
     each component"""
     components = {}
