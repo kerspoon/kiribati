@@ -7,6 +7,12 @@ import sys
 from modifiedtestcase import *
 from pymisc import *
 
+# ---------------------------------------------------------------------------- #
+# read :: stream :: dict(name = probability)
+# make_outage_generator :: dict(name = probability) :: (set(str))
+# make_sample_generator :: dict(name = probability) :: (set(str))
+
+
 # probability_failure :: real(>0) -> real(0,1)
 def probability_failure(failrate):
     """returns the probability of a component 
