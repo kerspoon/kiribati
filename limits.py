@@ -37,14 +37,14 @@ def cleanup_output(infile):
 class Limits:
     """min_volt, max_volt, line_limit_type, line_limits"""
 
-    def __init__(self,limits="rts.lim", min_volt=0.9, max_volt=1.1, line_limit_type=1):
+    def __init__(self, limitsfile, min_volt=0.9, max_volt=1.1, line_limit_type=1):
         self.limits = limits
         self.min_volt = min_volt
         self.max_volt = max_volt
         self.line_limit_type = line_limit_type
-        self.readlimits(open(limits))
+        self.readlimits(limitsfile)
 
-    def readlimits(self,limitsfile):
+    def readlimits(self, limitsfile):
         self.line_limit = {}
         reader  = csv.reader(limitsfile)
         for row in reader:
