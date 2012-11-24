@@ -5,6 +5,12 @@
 #   limitChecker = Limits()
 #   limitsChecker.check(loadflow_stdout)
 
+import csv
+import string
+
+def skiplines(infile,n):
+    for x in range(n):
+        infile.readline()
 
 
 def cleanup_output(infile):
@@ -38,7 +44,6 @@ class Limits:
     """min_volt, max_volt, line_limit_type, line_limits"""
 
     def __init__(self, limitsfile, min_volt=0.9, max_volt=1.1, line_limit_type=1):
-        self.limits = limits
         self.min_volt = min_volt
         self.max_volt = max_volt
         self.line_limit_type = line_limit_type

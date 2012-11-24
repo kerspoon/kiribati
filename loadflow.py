@@ -117,8 +117,8 @@ class Loadflow(object):
                 if value[4].strip() not in buskill and value[5].strip() not in buskill: 
                     csvwriter.writerow(value)
 
-    def check_limits(output):
-        return limits_checker.check(output)
+    def check_limits(self, output):
+        return self.limits_checker.check(output)
 
     def simulate(self, sample):
         
