@@ -5,7 +5,6 @@ import csv
 import math
 import sys 
 from modifiedtestcase import *
-from pymisc import *
 
 # ---------------------------------------------------------------------------- #
 # read :: stream :: dict(name = probability)
