@@ -12,9 +12,30 @@ def main_outage(num, out_stream):
     output_scenario(batch, out_stream)
 
 
-def main_n_minus_x(x, out_stream):
-    batch = list(n_minus_x_generator(x, open("rts.net")))
-    output_scenario(batch, out_stream)
+def main_n_minus_x(x, no_input, in_stream, out_stream):
+    fail_batch = list(n_minus_x_generator(x, open("rts.net")))
+
+    # for information print the unmodified base case
+    # and the un-combined failures
+    if not no_input:
+        out_stream.write("0, base, None, , 1.0\n")
+
+    output_scenario(fail_batch, out_stream)
+
+    # if we didn't have a input file then we are done
+    if no_input:
+        return
+
+    # otherwise read the input as a list of scenarios and their count
+    # for each base combine it with all the failures
+    # we ignore the count for the base (not sure what to do with it)
+    for base_count, base_scenario in stream_scenario_generator(in_stream):
+        out_stream.write(str(base_count) + ", " + str(base_scenario) + "\n")
+
+        for count, fail_scenario in fail_batch:
+            new_scenario = combine_scenarios(base_scenario, fail_scenario)
+            out_stream.write(str(count) + ", " + str(new_scenario) + "\n")
+
 
 
 def main_simulate(in_stream, out_stream):
@@ -34,7 +55,8 @@ def main_failure(num, no_input, in_stream, out_stream):
 
     # for information print the unmodified base case
     # and the un-combined failures
-    out_stream.write("0, base, None, , 1.0\n")
+    if not no_input:
+        out_stream.write("0, base, None, , 1.0\n")
     output_scenario(fail_batch, out_stream)
 
     # if we didn't have a input file then we are done
@@ -103,8 +125,16 @@ def main ():
         retval = main_outage(num, out_stream)
 
     elif args[0] == "n-x":
+        no_input = False
+        if len(args) == 3:
+            if args[2] == "noInput":
+                no_input = True
+            else:
+                parser.error("expected 2 arguments or 'noInput'.")
+        elif len(args) != 2:
+            parser.error("expected 2 arguments got " + str(len(args)))
         x = int(args[1])
-        retval = main_n_minus_x(x, out_stream)
+        retval = main_n_minus_x(x, no_input, in_stream, out_stream)
 
     elif args[0] == "simulate":
         if len(args) != 1:
