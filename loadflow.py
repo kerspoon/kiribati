@@ -38,7 +38,7 @@ class Loadflow(object):
                 branchname = row[1].strip()
                 self.branches[branchname] = row
 
-    def lfgenerator(self, output, sample):
+    def lfgenerator(self, output, scenario):
         """from the loadflow kill everything in the killlist 
         and save resulting loadlow to writer."""
 
@@ -47,7 +47,7 @@ class Loadflow(object):
         # 3. kill all the generator linking lines
         #    i.e. kill lines 'X + 2.'
 
-        killlist = set([x.strip() for x in sample.kill_list])
+        killlist = set([x.strip() for x in scenario.kill_list])
         allbranches = set(self.branches.keys())
         allbusses = set(self.busbars.keys())
 
@@ -105,6 +105,10 @@ class Loadflow(object):
         # ignore everything in killlist, print the rest
         for (name, value) in self.busbars.items():
             if name not in buskill:
+                new_value = value[:]
+                if strip(new_value[7]) != "":
+                    new_value[7] = str(float(new_value[7]) * scenario.bus_level)
+
                 if name != newslackbus:
                     csvwriter.writerow(value)
                 else:
@@ -114,7 +118,7 @@ class Loadflow(object):
         # remember to kill lines on dead busbars 
         for (name,value) in self.branches.items():
             if name not in branchkill:
-                if value[4].strip() not in buskill and value[5].strip() not in buskill: 
+                if value[4].strip() not in buskill and value[5].strip() not in buskill:
                     csvwriter.writerow(value)
 
     def check_limits(self, output):
