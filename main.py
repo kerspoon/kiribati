@@ -4,7 +4,7 @@ import sys
 from scenario import outage_scenario_generator, failure_scenario_generator, output_scenario, generate_n_unique, stream_scenario_generator, combine_scenarios, scenario_from_csv, n_minus_x_generator
 from limits import Limits
 from loadflow import Loadflow
-from misc import as_csv
+from misc import as_csv, grem
 
 
 def main_outage(num, out_stream):
@@ -155,6 +155,11 @@ def main ():
 
     elif args[0] == "analyse":
         retval = main_analyse(in_stream, out_stream)
+
+    elif args[0] == 'clean':
+        retval = 0
+        grem(".", r".*\.pyc")
+        grem(".", r".*\.csv")
 
     else:
         parser.error("expected [outage, simulate, failure] got " + str(args[0]))
