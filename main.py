@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import csv
 import sys 
-from scenario import outage_scenario_generator, failure_scenario_generator, output_scenario, generate_n_unique, input_scenario, combine_scenarios, scenario_from_csv
+from scenario import outage_scenario_generator, failure_scenario_generator, output_scenario, generate_n_unique, stream_scenario_generator, combine_scenarios, scenario_from_csv
 from limits import Limits
 from loadflow import Loadflow
 
@@ -11,12 +11,10 @@ def main_outage(num, out_stream):
 
 
 def main_simulate(in_stream, out_stream):
-    batch = input_scenario(in_stream)
     limits = Limits(open("rts.lim"))
     loadflow = Loadflow(open("rts.lf"), limits)
 
-    for scenario_text, count in batch.items():
-        scenario = scenario_from_csv(scenario_text)
+    for count, scenario in stream_scenario_generator(in_stream):
         result, result_reason = loadflow.simulate(scenario)
         scenario.result = result
         scenario.result_reason = result_reason
@@ -37,22 +35,14 @@ def main_failure(num, no_input, in_stream, out_stream):
         return
 
     # otherwise read the input as a list of scenarios and their count
-    base_batch = input_scenario(in_stream)
     # for each base combine it with all the failures
     # we ignore the count for the base (not sure what to do with it)
-    for base_scenario_text, base_count in base_batch.items():
-        base_scenario = scenario_from_csv(base_scenario_text)
+    for base_count, base_scenario in stream_scenario_generator(in_stream):
+        out_stream.write(str(base_count) + ", " + str(base_scenario) + "\n")
 
-        new_batch = dict()
-
-        for fail_scenario_text, count in fail_batch.items():
-            fail_scenario = scenario_from_csv(fail_scenario_text)
-
+        for count, fail_scenario in fail_batch:
             new_scenario = combine_scenarios(base_scenario, fail_scenario)
-            new_batch[str(new_scenario)] = count
-
-        out_stream.write(str(base_count) + ", " + base_scenario_text + "\n")
-        output_scenario(new_batch, out_stream)
+            out_stream.write(str(count) + ", " + str(new_scenario) + "\n")
 
 
 def main ():

@@ -1,5 +1,5 @@
 #!/bin/sh
-python2 main.py outage 1 > outage.csv
-python2 main.py failure 10 < outage.csv > combined.csv
+python2 main.py outage $1 > outage.csv
+python2 main.py failure $2 < outage.csv > combined.csv
 python2 main.py simulate < combined.csv > result.csv
 

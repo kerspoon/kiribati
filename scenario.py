@@ -16,6 +16,11 @@ def failure_scenario_generator(net_file):
 	for kill_list in sample_generator:
 		yield Scenario("failure", quantised_05(actual_load2(1.0)), kill_list)
 
+def stream_scenario_generator(in_stream):
+    for line in in_stream:
+        split_line = line.split(", ")
+        scenario = scenario_from_csv(", ".join(split_line[1:]))
+        yield split_line[0], scenario
 
 def generate_n_unique(generator, num):
     batch = defaultdict(int)
@@ -23,7 +28,11 @@ def generate_n_unique(generator, num):
         if len(batch) >= num:
             break
         batch[str(scenario)] += 1
-    return batch
+
+    new_batch = []
+    for scenario, n in batch.items():
+        new_batch.append((n, scenario_from_csv(scenario)))
+    return new_batch
 
 def scenario_from_csv(text):
     items = [x.strip() for x in text.split(", ")]
@@ -34,15 +43,10 @@ def scenario_from_csv(text):
     return scenario
 
 def input_scenario(in_stream):
-    batch = dict()
-    for line in in_stream:
-        split_line = line.split(", ")
-        scenario = scenario_from_csv(", ".join(split_line[1:]))
-        batch[str(scenario)] = split_line[0]
-    return batch
+    return list(stream_scenario_generator(in_stream))
 
 def output_scenario(batch, out_stream):
-    for scenario, n in batch.items():
+    for n, scenario in batch:
         out_stream.write(str(n) + ", " + str(scenario) + "\n")
 
 def combine_scenarios(one, other):
@@ -61,6 +65,7 @@ class Scenario:
     def __str__(self):
     	return misc.as_csv([self.scenario_type, self.result, self.result_reason, self.bus_level] + list(self.kill_list), ", ")
 
+
 #==============================================================================
 #
 #==============================================================================
@@ -69,7 +74,7 @@ class Scenario:
 class TestRead(ModifiedTestCase):
 
     def util_readwrite_match(self, inp):
-        batch = input_scenario(StringIO(inp))
+        batch = list(input_scenario(StringIO(inp)))
         stream = StringIO()
         output_scenario(batch, stream)
         self.assertEqual(stream.getvalue(), inp)
