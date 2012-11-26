@@ -5,6 +5,7 @@ from collections import defaultdict
 from modifiedtestcase import ModifiedTestCase
 import unittest
 from StringIO import StringIO
+from combinations import uniqueCombinations
 
 def outage_scenario_generator(net_file):
 	outage_generator = sampler.make_outage_generator(sampler.read(net_file))
@@ -15,6 +16,10 @@ def failure_scenario_generator(net_file):
 	sample_generator = sampler.make_sample_generator(sampler.read(net_file))
 	for kill_list in sample_generator:
 		yield Scenario("failure", quantised_05(actual_load2(1.0)), kill_list)
+
+def n_minus_x_generator(x, net_file):
+    for kill_list in uniqueCombinations(sampler.read(net_file).keys(), x):
+        yield 1, Scenario("n-x", 1.0, kill_list)
 
 def stream_scenario_generator(in_stream):
     for line in in_stream:

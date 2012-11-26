@@ -1,13 +1,19 @@
 #! /usr/bin/env python
 import csv
 import sys 
-from scenario import outage_scenario_generator, failure_scenario_generator, output_scenario, generate_n_unique, stream_scenario_generator, combine_scenarios, scenario_from_csv
+from scenario import outage_scenario_generator, failure_scenario_generator, output_scenario, generate_n_unique, stream_scenario_generator, combine_scenarios, scenario_from_csv, n_minus_x_generator
 from limits import Limits
 from loadflow import Loadflow
 from misc import as_csv
 
+
 def main_outage(num, out_stream):
     batch = generate_n_unique(outage_scenario_generator(open("rts.net")), num)
+    output_scenario(batch, out_stream)
+
+
+def main_n_minus_x(x, out_stream):
+    batch = list(n_minus_x_generator(x, open("rts.net")))
     output_scenario(batch, out_stream)
 
 
@@ -95,6 +101,10 @@ def main ():
             parser.error("expected 2 arguments got " + str(len(args)))
         num = int(args[1])
         retval = main_outage(num, out_stream)
+
+    elif args[0] == "n-x":
+        x = int(args[1])
+        retval = main_n_minus_x(x, out_stream)
 
     elif args[0] == "simulate":
         if len(args) != 1:
