@@ -4,6 +4,7 @@ import sys
 from scenario import outage_scenario_generator, failure_scenario_generator, output_scenario, generate_n_unique, stream_scenario_generator, combine_scenarios, scenario_from_csv
 from limits import Limits
 from loadflow import Loadflow
+from misc import as_csv
 
 def main_outage(num, out_stream):
     batch = generate_n_unique(outage_scenario_generator(open("rts.net")), num)
@@ -45,6 +46,37 @@ def main_failure(num, no_input, in_stream, out_stream):
             out_stream.write(str(count) + ", " + str(new_scenario) + "\n")
 
 
+def main_analyse(in_stream, out_stream):
+    group = []
+    pfail = []
+
+    def output_group_stats(grp):
+        group_size = sum(c for c,s in grp)
+        failures = float(sum(c for c,s in grp if s.result is False))
+        pfail.append(failures/group_size)
+        out_stream.write(as_csv([failures, group_size, failures/group_size], ", ") + "\n")
+
+    for count, scenario in stream_scenario_generator(in_stream):
+        if scenario.scenario_type == "outage" or scenario.scenario_type == "base":
+            if len(group) != 0:
+                output_group_stats(group)
+                group = []
+
+            # output base stats of new group
+            out_stream.write(str(count) + ", " + str(scenario) + "\n")
+        else:
+            group.append((count, scenario))
+
+    if len(group) != 0:
+        output_group_stats(group)
+        group = []
+
+    out_stream.write("\n")
+    out_stream.write("min , " + str(min(pfail)) + "\n")
+    out_stream.write("max , " + str(max(pfail)) + "\n")
+    out_stream.write("avg , " + str(sum(pfail)/len(pfail)) + "\n")
+
+
 def main ():
     from optparse import OptionParser
 
@@ -80,6 +112,9 @@ def main ():
             parser.error("expected 2 arguments got " + str(len(args)))
         num = int(args[1])
         retval = main_failure(num, no_input, in_stream, out_stream)
+
+    elif args[0] == "analyse":
+        retval = main_analyse(in_stream, out_stream)
 
     else:
         parser.error("expected [outage, simulate, failure] got " + str(args[0]))

@@ -20,7 +20,7 @@ def stream_scenario_generator(in_stream):
     for line in in_stream:
         split_line = line.split(", ")
         scenario = scenario_from_csv(", ".join(split_line[1:]))
-        yield split_line[0], scenario
+        yield int(split_line[0]), scenario
 
 def generate_n_unique(generator, num):
     batch = defaultdict(int)
@@ -38,7 +38,10 @@ def scenario_from_csv(text):
     items = [x.strip() for x in text.split(", ")]
     # TODO test this
     scenario = Scenario(items[0], float(items[3]), items[4:])
-    scenario.result = items[1]
+    if items[1] == "None":
+        scenario.result = None
+    else:
+        scenario.result = (items[1] == "True")
     scenario.result_reason = items[2]
     return scenario
 
@@ -80,7 +83,11 @@ class TestRead(ModifiedTestCase):
         self.assertEqual(stream.getvalue(), inp)
         
     def test_1(self):
-        self.util_readwrite_match("""1, outage, None, , 0.55, G49, G32, G22, G12\n""")
+        self.util_readwrite_match("""1, outage, False, bad, 0.55, G49, G32, G22, G12\n""")
+        self.util_readwrite_match("""999, failure, True, ok, 1.0\n""")
+        self.util_readwrite_match("""999, combined, None, ok, 0.01, A1\n""")
+        self.util_readwrite_match("""1, combined, False, component out of limits, 0.525, G31, G66\n""")
+
 
 
 #==============================================================================
