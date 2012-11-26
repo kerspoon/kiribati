@@ -1,11 +1,15 @@
 #!/bin/sh
 python2 main.py outage $1 > outage.csv
-python2 main.py failure $2 < outage.csv > combined.csv
-python2 main.py simulate < combined.csv > result.csv
+
+python2 main.py failure $2 < outage.csv > combi.csv
+python2 main.py simulate < combi.csv > result.csv
+python2 main.py analyse < result.csv > analysis.csv
 
 python2 main.py n-x 1 < outage.csv > nx-combi.csv
 python2 main.py simulate < nx-combi.csv > nx-result.csv
+python2 main.py analyse < nx-result.csv > nx-analysis.csv
 
 python2 main.py n-x 2 < outage.csv > nx2-combi.csv
 python2 main.py simulate < nx2-combi.csv > nx2-result.csv
+python2 main.py analyse < nx2-result.csv > nx2-analysis.csv
 
