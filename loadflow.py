@@ -106,7 +106,7 @@ class Loadflow(object):
         for (name, value) in self.busbars.items():
             if name not in buskill:
                 new_value = value[:]
-                if strip(new_value[7]) != "":
+                if new_value[7].strip() != "":
                     new_value[7] = str(float(new_value[7]) * scenario.bus_level)
 
                 if name != newslackbus:
