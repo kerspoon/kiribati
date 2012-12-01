@@ -130,15 +130,8 @@ def main_test(out_stream):
     limits = Limits(open("rts.lim"))
     loadflow = Loadflow(open("rts.lf"), limits)
 
-    try:
-        shutil.rmtree("test")
-    except:
-        pass
-    finally:
-        os.makedirs("test")
-
     for count, scenario in stream_scenario_generator(in_stream):
-        intermediate_file = open("test/" + scenario.scenario_type + ".csv", "w")
+        intermediate_file = open(scenario.scenario_type + ".csv", "w")
         loadflow.lfgenerator(intermediate_file, scenario)
         intermediate_file.close()
 
