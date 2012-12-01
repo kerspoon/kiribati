@@ -55,6 +55,15 @@ bus-gen   , 167, 215     , 385       ,       ,
 bus-slack , 168, 215     , 386       , Slack , 
 bus-island, 171, 219     , 393       , Island, 
 
+# Time # 
+
+The two factors are the number of bases (B) and the number of contingencies (C). The total time to simulate is a factor of:
+
+    generation-time = some exponential of C.
+    loadflow-time = (1+B)*(394+C)
+
+where 394 is the number of components. For example if B=10 and C=100 then it will do 5500 simulations which takes about 10mins (including generation time which is negligable here).
+
 
 
 
