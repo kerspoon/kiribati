@@ -115,15 +115,17 @@ def main_test(out_stream):
     """
 
     batch_string = ""
-    batch_string += "1, base, None, , 1.0\n"           # base - as normal
-    batch_string += "1, half, None, , 0.5\n"           # half load power
-    batch_string += "1, island, None, , 1.0, B11\n"    # island
-    batch_string += "1, slack, None, , 1.0, G12\n"     # removed 1 slack bus
+    batch_string += "1, base, None, , 1.0\n"            # base - as normal
+    batch_string += "1, half, None, , 0.5\n"            # half load power
+    batch_string += "1, island, None, , 1.0, B11\n"     # island
+    batch_string += "1, slack, None, , 1.0, G12\n"      # removed 1 slack bus
     batch_string += "1, slack-all, None, , 1.0, G12, G13, G14\n"  # removed all slack busses
-    batch_string += "1, bus, None, , 1.0, 104\n"       # remove 1 bus without generators
-    batch_string += "1, bus-gen, None, , 1.0, 101\n"   # remove 1 bus with generators attached
-    batch_string += "1, line, None, , 1.0, A2\n"       # remove 1 line
-    batch_string += "1, gen, None, , 1.0, G24\n"       # remove 1 generator
+    batch_string += "1, line, None, , 1.0, A2\n"        # remove 1 line
+    batch_string += "1, gen, None, , 1.0, G24\n"        # remove 1 generator
+    batch_string += "1, bus, None, , 1.0, 104\n"        # remove 1 bus without generators
+    batch_string += "1, bus-gen, None, , 1.0, 101\n"    # remove 1 bus with generators attached
+    batch_string += "1, bus-slack, None, , 1.0, 113\n"  # remove slack bus and all slack generators
+    batch_string += "1, bus-island, None, , 1.0, 208\n" # remove bus that causes island
 
     in_stream = StringIO(batch_string)
     
