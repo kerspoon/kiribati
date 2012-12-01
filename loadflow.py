@@ -117,9 +117,9 @@ class Loadflow(object):
                     new_value[7] = str(float(new_value[7]) * scenario.bus_level)
 
                 if name != newslackbus:
-                    csvwriter.writerow(value)
+                    csvwriter.writerow(new_value)
                 else:
-                    csvwriter.writerow(["2"] + value[1:])
+                    csvwriter.writerow(["2"] + new_value[1:])
 
         # same with the branches
         # remember to kill lines on dead busbars 
