@@ -105,10 +105,51 @@ def main_analyse(in_stream, out_stream):
     out_stream.write("avg , " + str(sum(pfail)/len(pfail)) + "\n")
 
 
+def main_test(out_stream):
+    """print the results and the intermediate file for 
+       a number of interesting scenarios. So we can check
+       by hand if the intermediate file generator and the
+       simulator are doing the correct thing.
+    """
+
+    batch_string = ""
+    batch_string += "1, base, None, , 1.0\n"           # base - as normal
+    batch_string += "1, half, None, , 0.5\n"           # half load power
+    batch_string += "1, island, None, , 1.0, B11\n"    # island
+    batch_string += "1, slack, None, , 1.0, G12\n"     # removed 1 slack bus
+    batch_string += "1, slack-all, None, , 1.0, G12, G13, G14\n"  # removed all slack busses
+    batch_string += "1, bus, None, , 1.0, 104\n"       # remove 1 bus without generators
+    batch_string += "1, bus-gen, None, , 1.0, 101\n"   # remove 1 bus with generators attached
+    batch_string += "1, line, None, , 1.0, A2\n"       # remove 1 line
+    batch_string += "1, gen, None, , 1.0, G24\n"       # remove 1 generator
+
+    in_stream = StringIO(batch_string)
+    
+    limits = Limits(open("rts.lim"))
+    loadflow = Loadflow(open("rts.lf"), limits)
+
+    try:
+        shutil.rmtree("test")
+    except:
+        pass
+    finally:
+        os.makedirs("test")
+
+    for count, scenario in stream_scenario_generator(in_stream):
+        intermediate_file = open("test/" + scenario.scenario_type + ".csv", "w")
+        loadflow.lfgenerator(intermediate_file, scenario)
+        intermediate_file.close()
+
+        result, result_reason = loadflow.simulate(scenario)
+        scenario.result = result
+        scenario.result_reason = result_reason
+        out_stream.write(str(count) + ", " + str(scenario) + "\n")
+
+
 def main ():
     from optparse import OptionParser
 
-    parser = OptionParser("e.g. python main.py rts.net 100 1000000", 
+    parser = OptionParser("e.g. python main.py [test, clean, analyse, simulate, outage, failure, n-x]", 
                           version="1-Oct-09 by James Brooks")
     (options, args) = parser.parse_args()
 
@@ -155,6 +196,9 @@ def main ():
 
     elif args[0] == "analyse":
         retval = main_analyse(in_stream, out_stream)
+
+    elif args[0] == "test":
+        retval = main_test(out_stream)
 
     elif args[0] == 'clean':
         retval = 0
