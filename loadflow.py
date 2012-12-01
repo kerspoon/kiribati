@@ -62,6 +62,13 @@ class Loadflow(object):
                 deadlines += [name]
         deadlines = set(deadlines)
 
+        # if we have killed a generator connecting line, kill its generator
+        special_kill = set()
+        for name in deadlines:
+            if name.startswith("XG"):
+                special_kill |= set([name[1:]])
+        buskill |= special_kill
+
         # print "killlist", killlist
         # print "deadlines", deadlines
         # print "branchkill", branchkill
