@@ -115,18 +115,22 @@ class Loadflow(object):
 
         # fix power mismatch
         names = {}
-        power = []
-        min_limit = []
-        max_limit = []
-        for n, (name, value) in enumerate(self.busbars.items()):
-            if name not in killlist and new_value[3].strip() != "":
-                names[name] = n
-                power.append(float(value[3]))
-                min_limit.append(0) # no minimum level for a generator
-                max_limit.append(self.limits_checker.gen_limit[name])
+        powers = []
 
-        mismatch = sum(power) * (1 - scenario.bus_level)
-        fixed_powers = fix_mismatch(mismatch, power, min_limit, max_limit)
+        if scenario.bus_level != 1:
+            min_limit = []
+            max_limit = []
+
+            for name, value in self.busbars.items():
+                if name not in killlist and value[3].strip() != "":
+                    names[name] = len(powers)
+                    powers.append(float(value[3]))
+                    min_limit.append(0) # no minimum level for a generator
+                    max_limit.append(self.limits_checker.gen_limit[name])
+
+            mismatch = sum(powers) * (1 - scenario.bus_level)
+            fixed_powers = fix_mismatch(mismatch, powers, min_limit, max_limit)
+            # print zip(powers, fixed_powers)
 
         # ignore everything in killlist, print the rest
         for (name, value) in self.busbars.items():
@@ -139,10 +143,12 @@ class Loadflow(object):
                     new_value[7] = str(float(new_value[7]) * scenario.bus_level)
 
                 # if we have a new generator power get it from fix mismatch
-                if name in names:
-                    new_value[3] = str(fixed_powers[names[name]])
+                # if name in names:
+                #     new_value[3] = str(fixed_powers[names[name]])
 
                 # print it out
+                # print len(new_value), " ".join(new_value)
+
                 if name != newslackbus:
                     csvwriter.writerow(new_value)
                 else:
