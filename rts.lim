@@ -132,7 +132,7 @@ gen , G11 , 100
 gen , G12 , 197
 gen , G13 , 197
 gen , G14 , 197
-gen , G15 , Sync
+gen , G15 , 0
 gen , G16 , 12
 gen , G17 , 12
 gen , G18 , 12
@@ -165,7 +165,7 @@ gen , G44 , 100
 gen , G45 , 197
 gen , G46 , 197
 gen , G47 , 197
-gen , G48 , Sync
+gen , G48 , 0
 gen , G49 , 12
 gen , G50 , 12
 gen , G51 , 12
@@ -198,7 +198,7 @@ gen , G77 , 100
 gen , G78 , 197
 gen , G79 , 197
 gen , G80 , 197
-gen , G81 , Sync
+gen , G81 , 0
 gen , G82 , 12
 gen , G83 , 12
 gen , G84 , 12

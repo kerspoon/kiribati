@@ -126,11 +126,10 @@ class Loadflow(object):
                     names[name] = len(powers)
                     powers.append(float(value[3]))
                     min_limit.append(0) # no minimum level for a generator
-                    max_limit.append(self.limits_checker.gen_limit[name])
+                    max_limit.append(float(self.limits_checker.gen_limit[name]))
 
-            mismatch = sum(powers) * (1 - scenario.bus_level)
+            mismatch = (sum(powers) * scenario.bus_level) - sum(powers)
             fixed_powers = fix_mismatch(mismatch, powers, min_limit, max_limit)
-            # print zip(powers, fixed_powers)
 
         # ignore everything in killlist, print the rest
         for (name, value) in self.busbars.items():

@@ -117,6 +117,7 @@ def main_test(out_stream):
     batch_string = ""
     batch_string += "1, base, None, , 1.0\n"            # base - as normal
     batch_string += "1, half, None, , 0.5\n"            # half load power
+    batch_string += "1, tenth, None, , 0.1\n"           # tenth load power
     batch_string += "1, island, None, , 1.0, B11\n"     # island
     batch_string += "1, slack, None, , 1.0, G12\n"      # removed 1 slack bus
     batch_string += "1, slack-all, None, , 1.0, G12, G13, G14\n"  # removed all slack busses
