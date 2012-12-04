@@ -51,10 +51,13 @@ class Limits:
 
     def readlimits(self, limitsfile):
         self.line_limit = {}
+        self.gen_limit = {}
         reader  = csv.reader(limitsfile)
         for row in reader:
             if row[0].strip() == "line":
                 self.line_limit[(row[2].strip() , row[3].strip())] = row[4:]
+            elif row[0].strip() == "gen":
+                self.gen_limit[row[1].strip()] = row[2].strip()
             else:
                 raise "expected 'line' got '" + row[0] + "'"
 
