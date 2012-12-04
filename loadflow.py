@@ -5,6 +5,10 @@ import string
 import StringIO
 import subprocess
 import sys 
+import unittest
+
+from misc import EnsureEqual, Ensure, EnsureNotEqual, EnsureIn, Error
+from modifiedtestcase import ModifiedTestCase
 
 """start with a sample, create a stream to put into loadflow.exe, 
 run the loadflow, analyse the output stream to see if it is an 
@@ -109,13 +113,36 @@ class Loadflow(object):
                 # print "it will fail the simulation"
                 pass 
 
+        # fix power mismatch
+        names = {}
+        power = []
+        min_limit = []
+        max_limit = []
+        for n, (name, value) in enumerate(self.busbars.items()):
+            if name not in killlist and new_value[3].strip() != "":
+                names[name] = n
+                power.append(float(value[3]))
+                min_limit.append(0) # no minimum level for a generator
+                max_limit.append(self.limits_checker.gen_limit[name])
+
+        mismatch = sum(power) * (1 - scenario.bus_level)
+        fixed_powers = fix_mismatch(mismatch, power, min_limit, max_limit)
+
         # ignore everything in killlist, print the rest
         for (name, value) in self.busbars.items():
             if name not in buskill:
+                # don't modify self
                 new_value = value[:]
+
+                # if we have a load power - times it by the bus_level
                 if new_value[7].strip() != "":
                     new_value[7] = str(float(new_value[7]) * scenario.bus_level)
 
+                # if we have a new generator power get it from fix mismatch
+                if name in names:
+                    new_value[3] = str(fixed_powers[names[name]])
+
+                # print it out
                 if name != newslackbus:
                     csvwriter.writerow(new_value)
                 else:
@@ -177,3 +204,200 @@ class Loadflow(object):
         else:
             return (False, "component out of limits")
 
+
+#==============================================================================
+#
+#==============================================================================
+
+
+def fix_mismatch(mismatch, power, min_limit, max_limit):
+    """
+    func fix_mismatch :: Real, [Real], [Real], [Real] -> [Real]
+    
+    change the total generated power by `mismatch`.
+    Do this based upon current power of each generator
+    taking into account its limits.
+    Returns a list of new generator powers
+    """
+
+    EnsureEqual(len(power), len(min_limit))
+    EnsureEqual(len(power), len(max_limit))
+
+    if mismatch == 0:
+        return power
+    
+    done = [False for _ in range(len(power))]
+    result = [0.0 for _ in range(len(power))]
+     
+    def find_limit_max(m):
+        """find the index of the first generator that will
+        be limited. or None """
+        for n in range(len(done)):
+            if (not done[n]) and (power[n] * m > max_limit[n]):
+                return n
+        return None
+     
+    def find_limit_min(m):
+        """find the index of the first generator that will
+        be limited. or None """
+        for n in range(len(done)):
+            if (not done[n]) and (power[n] * m < min_limit[n]):
+                return n
+        return None
+
+    Ensure(sum(min_limit) < sum(power) + mismatch < sum(max_limit),
+           "mismatch of %f is outside limits (%f < %f < %f)" % (mismatch, sum(min_limit), sum(power) + mismatch , sum(max_limit)))
+
+    # print "mismatch\t%f" % mismatch
+    # print "total gen\t%f" % sum(power)
+    # print "total min gen\t%f" % sum(min_limit)
+    # print "total max gen\t%f" % sum(max_limit)
+    # print "-"*10
+    # print "power\t%s" % as_csv(power,"\t")
+    # print "min_limit\t%s" % as_csv(min_limit,"\t")
+    # print "max_limit\t%s" % as_csv(max_limit,"\t")
+    # if mismatch > 0:
+    #     print as_csv([b-a for a,b in zip(power, max_limit)], "\t")
+    #     print sum(max_limit) - sum(power)
+    # else:
+    #     print as_csv([b-a for a,b in zip(power, min_limit)], "\t")
+    #     print sum(power) - sum(min_limit)
+        
+
+    # deal with each generator that will be limited
+    while True:
+        Ensure(not all(done), "programmer error")
+
+        # print "fix_mismatch", len([1 for x in done if x])
+
+        total_gen = sum(power[i] for i in range(len(done)) if not done[i])
+        EnsureNotEqual(total_gen, 0)
+        
+        multiplier = 1.0 + (mismatch / total_gen)
+
+        # we shouldn't really care about the miltiplier as long as 
+        # the limits are being met should we?
+        Ensure(0 <= multiplier <= 5, "vague sanity check")
+
+        if mismatch < 0:
+            idx_gen = find_limit_min(multiplier)
+            if idx_gen is None:
+                break
+
+            # print "generator hit min limit:", idx_gen
+            result[idx_gen] = min_limit[idx_gen]
+            mismatch -= result[idx_gen] - power[idx_gen]
+            done[idx_gen] = True
+        else:
+            idx_gen = find_limit_max(multiplier)
+            if idx_gen is None:
+                break
+
+            # print "generator hit max limit:", idx_gen
+            result[idx_gen] = max_limit[idx_gen]
+            mismatch -= result[idx_gen] - power[idx_gen]
+            done[idx_gen] = True
+
+    # deal with all the other generators 
+    # knowing that none of them will limit
+    for idx in range(len(power)):
+        if not done[idx]:
+            # print "set generator", idx
+            result[idx] = power[idx] * multiplier
+            mismatch -= result[idx] - power[idx]
+            done[idx] = True
+  
+    # check nothing is out of limits 
+    for idx in range(len(power)):
+        Ensure(power[idx] == 0 or (min_limit[idx] <= power[idx] <= max_limit[idx]),
+               "Power (%d) out of limit (%f<=%f<=%f)" % (idx,
+                                                         min_limit[idx],
+                                                         power[idx],
+                                                         max_limit[idx]))
+    Ensure(mismatch < 0.001, "should be much mismatch left after fixing it")
+    Ensure(all(done), "should have fixed everything")
+    
+    return result
+
+
+#==============================================================================
+#
+#==============================================================================
+
+
+class Test_fix_mismatch(ModifiedTestCase):
+
+    def test_1(self):
+        p_list = [1, 1, 1, 1, 1]
+        max_list = [2, 2, 2, 2, 2]
+        min_list = [-2, -2, -2, -2, -2]
+
+        res = fix_mismatch(0, p_list, min_list, max_list)
+        self.assertAlmostEqualList(res, p_list)
+      
+    def test_2(self):
+        p_list = [1, 1]
+        max_list = [2, 2]
+        min_list = [-2, -2]
+
+        res = fix_mismatch(1.0, p_list, min_list, max_list)
+        self.assertAlmostEqualList(res, [1.5, 1.5])
+
+    def test_3(self):
+        p_list = [1, 0, 1]
+        max_list = [2, 2, 2]
+        min_list = [-2, -2, -2]
+        res = fix_mismatch(1.0, p_list, min_list, max_list)
+        self.assertAlmostEqualList(res, [1.5, 0, 1.5])
+
+    def test_4(self):
+        p_list = [2, 4]
+        max_list = [8, 8]
+        min_list = [-8, -8]
+        res = fix_mismatch(3.0, p_list, min_list, max_list)
+        self.assertAlmostEqualList(res, [3, 6])
+
+    def test_5(self):
+        p_list = [2, 4]
+        max_list = [8, 5]
+        min_list = [-8, -5]
+        res = fix_mismatch(3.0, p_list, min_list, max_list)
+        self.assertAlmostEqualList(res, [4, 5])
+
+    def test_6(self):
+        p_list = [1, 1]
+        max_list = [2, 2]
+        min_list = [-2, -2]
+
+        res = fix_mismatch(-1.0, p_list, min_list, max_list)
+        self.assertAlmostEqualList(res, [0.5, 0.5])
+
+    def test_7(self):
+        p_list = [1, 0, 1]
+        max_list = [2, 2, 2]
+        min_list = [-2, -2, -2]
+        res = fix_mismatch(-1.0, p_list, min_list, max_list)
+        self.assertAlmostEqualList(res, [0.5, 0, 0.5])
+
+    def test_8(self):
+        p_list = [2, 4]
+        max_list = [8, 8]
+        min_list = [-8, -8]
+        res = fix_mismatch(-3.0, p_list, min_list, max_list)
+        self.assertAlmostEqualList(res, [1, 2])
+
+    def test_9(self):
+        p_list = [2, 4]
+        max_list = [8, 5]
+        min_list = [-1, 3]
+        res = fix_mismatch(-3.0, p_list, min_list, max_list)
+        self.assertAlmostEqualList(res, [0, 3])
+
+
+#==============================================================================
+#
+#==============================================================================
+
+
+if __name__ == '__main__':
+    unittest.main()
