@@ -142,6 +142,8 @@ class Loadflow(object):
         # mismatch is sum(load_power) + line_losses - sum(gen_power) after: fix mismatch, bus_level and killed.
         mismatch = (sum(load_powers) * scenario.bus_level) + self.line_losses - sum(powers)
         fixed_powers = fix_mismatch(mismatch, powers, min_limit, max_limit)
+        # line for `main.py test` to check with notes.
+        # print "mismatch", 8550 - (sum(load_powers) * scenario.bus_level), 8997.9-sum(fixed_powers)
 
         # ignore everything in killlist, print the rest
         for (name, value) in self.busbars.items():

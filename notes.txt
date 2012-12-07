@@ -41,19 +41,20 @@ Some of the python scripts if run on their own will run a few small unit tests a
 
 The results of the test need to be checked by hand. For example when 1 line is killed you would expect all 172 busses to still be there, 221 of the 222 lines and a total number of new lines in the file to be 396. You also should be able to find that line name by searching through the file. For youme of them you would expect a certain result from the simulation too (e.g. islanded system should be islanded). You would also expect fix_mismatch to have run meaning each generator will be change in proportion to it size.
 
-name      , bus, branches, file-lines, result, 
+name      , bus, branches, file-lines, result, change(load), change(gen)
 --------------------------------------------------------------------
-base      , 172, 222     , 397       , True  , 
-half      , 172, 222     , 397       ,       , 
-island    , 172, 221     , 396       , Island, 
-slack     , 171, 221     , 395       , True  , 
-slack-all , 169, 219     , 391       , Slack , 
-line      , 172, 221     , 396       ,       , 
-gen       , 171, 221     , 395       ,       , 
-bus       , 171, 220     , 394       ,       , 
-bus-gen   , 167, 215     , 385       ,       , 
-bus-slack , 168, 215     , 386       , Slack , 
-bus-island, 171, 219     , 393       , Island, 
+base      , 172, 222     , 397       , True  ,             , 
+half      , 172, 222     , 397       ,       , -4275       , -4275
+tenth     , 172, 222     , 397       ,       , -7695       , -7695
+island    , 172, 221     , 396       , Island,             , 
+slack     , 171, 221     , 395       , True  ,             , (95.1-95.1)
+slack-all , 169, 219     , 391       , Slack ,             , (172-172)
+line      , 172, 221     , 396       ,       ,             , 
+gen       , 171, 221     , 395       ,       ,             , (400-400)
+bus       , 171, 220     , 394       ,       , 74          , -74
+bus-gen   , 167, 215     , 385       ,       , -108        , -108+(172-172)
+bus-slack , 168, 215     , 386       , Slack , -265        , -265+(285.3-285.3)
+bus-island, 171, 219     , 393       , Island, -171        , -171
 
 # Time # 
 
