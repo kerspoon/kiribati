@@ -39,7 +39,7 @@ If we apply both SAS to the base cases we will find the assessment of whether th
 
 Some of the python scripts if run on their own will run a few small unit tests and show the result. The main tests that cover the simulation part is done by running `python main.py test`. This will print the results and the intermediate file for a number of interesting scenarios. So we can check by hand if the intermediate file generator and the simulator are doing the correct thing.
 
-The results of the test need to be checked by hand. For example when 1 line is killed you would expect all 172 busses to still be there, 221 of the 222 lines and a total number of new lines in the file to be 396. You also should be able to find that line name by searching through the file. For youme of them you would expect a certain result from the simulation too (e.g. islanded system should be islanded).
+The results of the test need to be checked by hand. For example when 1 line is killed you would expect all 172 busses to still be there, 221 of the 222 lines and a total number of new lines in the file to be 396. You also should be able to find that line name by searching through the file. For youme of them you would expect a certain result from the simulation too (e.g. islanded system should be islanded). You would also expect fix_mismatch to have run meaning each generator will be change in proportion to it size.
 
 name      , bus, branches, file-lines, result, 
 --------------------------------------------------------------------

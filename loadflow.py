@@ -142,8 +142,8 @@ class Loadflow(object):
                     new_value[7] = str(float(new_value[7]) * scenario.bus_level)
 
                 # if we have a new generator power get it from fix mismatch
-                # if name in names:
-                #     new_value[3] = str(fixed_powers[names[name]])
+                if name in names:
+                    new_value[3] = str(fixed_powers[names[name]])
 
                 # print it out
                 # print len(new_value), " ".join(new_value)
@@ -172,7 +172,12 @@ class Loadflow(object):
                                 stdin=subprocess.PIPE
                                 )
 
-        self.lfgenerator(proc.stdin, sample)
+        try:
+            self.lfgenerator(proc.stdin, sample)
+        except Error, e:
+            print str(e)
+            return (False, e.msg)
+
         so, se = proc.communicate()
 
 
