@@ -24,6 +24,8 @@ class Loadflow(object):
         self.busbars  = {}
         self.branches = {}
         self.limits_checker = limits_checker
+
+        self.line_losses = 0
         
         x = 0 # enumerate would mess up on comment lines 
         for row in csv.reader(loadflowstream):
@@ -38,6 +40,12 @@ class Loadflow(object):
             elif x < numbus+3:
                 busname = row[2].strip()
                 self.busbars[busname] = row
+
+                # calcluaste line losses
+                if row[3].strip() != "":
+                    self.line_losses += float(row[3])
+                if row[7].strip() != "":
+                    self.line_losses -= float(row[7])
             else:
                 branchname = row[1].strip()
                 self.branches[branchname] = row
@@ -116,20 +124,24 @@ class Loadflow(object):
         # fix power mismatch
         names = {}
         powers = []
+        load_powers = []
 
-        if scenario.bus_level != 1:
-            min_limit = []
-            max_limit = []
+        min_limit = []
+        max_limit = []
 
-            for name, value in self.busbars.items():
-                if name not in killlist and value[3].strip() != "":
+        for name, value in self.busbars.items():
+            if name not in killlist:
+                if value[3].strip() != "":
                     names[name] = len(powers)
                     powers.append(float(value[3]))
                     min_limit.append(0) # no minimum level for a generator
                     max_limit.append(float(self.limits_checker.gen_limit[name]))
+                if value[7].strip() != "":
+                    load_powers.append(float(value[7]))
 
-            mismatch = (sum(powers) * scenario.bus_level) - sum(powers)
-            fixed_powers = fix_mismatch(mismatch, powers, min_limit, max_limit)
+        # mismatch is sum(load_power) + line_losses - sum(gen_power) after: fix mismatch, bus_level and killed.
+        mismatch = (sum(load_powers) * scenario.bus_level) + self.line_losses - sum(powers)
+        fixed_powers = fix_mismatch(mismatch, powers, min_limit, max_limit)
 
         # ignore everything in killlist, print the rest
         for (name, value) in self.busbars.items():
@@ -164,55 +176,58 @@ class Loadflow(object):
         return self.limits_checker.check(output)
 
     def simulate(self, sample):
-        
-        proc = subprocess.Popen('./loadflow -i10000 -t -y',
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                stdin=subprocess.PIPE
-                                )
+        try: 
+            proc = subprocess.Popen('./loadflow -i10000 -t -y',
+                                    shell=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    stdin=subprocess.PIPE
+                                    )
 
-        try:
-            self.lfgenerator(proc.stdin, sample)
-        except Error, e:
-            # remove `,` from message
-            return (False, ''.join(c for c in e.msg if c not in ','))
+            try:
+                self.lfgenerator(proc.stdin, sample)
+            except Error, e:
+                # remove `,` from message
+                return (False, ''.join(c for c in e.msg if c not in ','))
 
-        so, se = proc.communicate()
+            so, se = proc.communicate()
 
 
-        # print "\n\n\nSE\n\n\n"
-        # print se
+            # print "\n\n\nSE\n\n\n"
+            # print se
 
-        # print "\n\n\nSO\n\n\n"
-        # print so
-        # return
+            # print "\n\n\nSO\n\n\n"
+            # print so
+            # return
 
-        err_lines = se.splitlines()
-        errstart = err_lines[0].strip()
+            err_lines = se.splitlines()
+            errstart = err_lines[0].strip()
 
-        if len(err_lines) == 4:
-            ok = True
-            ok &= err_lines[0].startswith("Time :-")
-            ok &= err_lines[1].startswith("(sec)")
-            ok &= err_lines[2].startswith("Jacobian Matrix:")
-            ok &= err_lines[3].startswith("Best Maximum Mismatch :")
-            if not ok:
-                return (False,"unexpected 4: " + errstart)
-        else:
-            if len(err_lines) == 1 and errstart.startswith("error: no slack bus defined"):
-                return (False,"no slack bus")
-            if len(err_lines) >= 1 and errstart.startswith("warning 1: stop - divergence"):
-                return (False,"divergence")
-            if len(err_lines) >= 1 and errstart.startswith("error: zero diagonal element"):
-                return (False,"islanded")
-            return (False,"unexpected: " + errstart)
+            if len(err_lines) == 4:
+                ok = True
+                ok &= err_lines[0].startswith("Time :-")
+                ok &= err_lines[1].startswith("(sec)")
+                ok &= err_lines[2].startswith("Jacobian Matrix:")
+                ok &= err_lines[3].startswith("Best Maximum Mismatch :")
+                if not ok:
+                    return (False,"unexpected 4: " + errstart)
+            else:
+                if len(err_lines) == 1 and errstart.startswith("error: no slack bus defined"):
+                    return (False,"no slack bus")
+                if len(err_lines) >= 1 and errstart.startswith("warning 1: stop - divergence"):
+                    return (False,"divergence")
+                if len(err_lines) >= 1 and errstart.startswith("error: zero diagonal element"):
+                    return (False,"islanded")
+                return (False,"unexpected: " + errstart)
 
-        res = self.check_limits(StringIO.StringIO(so))
-        if res == 0:
-            return (True, "ok")
-        else:
-            return (False, "component out of limits")
+            res = self.check_limits(StringIO.StringIO(so))
+            if res == 0:
+                return (True, "ok")
+            else:
+                return (False, "component out of limits")
+
+        except Exception, e:
+            return (False, "other error")
 
 
 #==============================================================================
