@@ -32,11 +32,12 @@ def main_n_minus_x(x, no_input, in_stream, out_stream):
     # for each base combine it with all the failures
     # we ignore the count for the base (not sure what to do with it)
     for base_count, base_scenario in stream_scenario_generator(in_stream):
-        out_stream.write(str(base_count) + ", " + str(base_scenario) + "\n")
+        if base_scenario.result is not False:
+            out_stream.write(str(base_count) + ", " + str(base_scenario) + "\n")
 
-        for count, fail_scenario in fail_batch:
-            new_scenario = combine_scenarios(base_scenario, fail_scenario)
-            out_stream.write(str(count) + ", " + str(new_scenario) + "\n")
+            for count, fail_scenario in fail_batch:
+                new_scenario = combine_scenarios(base_scenario, fail_scenario)
+                out_stream.write(str(count) + ", " + str(new_scenario) + "\n")
 
 
 
@@ -68,12 +69,14 @@ def main_failure(num, no_input, in_stream, out_stream):
     # otherwise read the input as a list of scenarios and their count
     # for each base combine it with all the failures
     # we ignore the count for the base (not sure what to do with it)
+    # skip the failed base cases (if they are simulated at all)
     for base_count, base_scenario in stream_scenario_generator(in_stream):
-        out_stream.write(str(base_count) + ", " + str(base_scenario) + "\n")
+        if base_scenario.result is not False:
+            out_stream.write(str(base_count) + ", " + str(base_scenario) + "\n")
 
-        for count, fail_scenario in fail_batch:
-            new_scenario = combine_scenarios(base_scenario, fail_scenario)
-            out_stream.write(str(count) + ", " + str(new_scenario) + "\n")
+            for count, fail_scenario in fail_batch:
+                new_scenario = combine_scenarios(base_scenario, fail_scenario)
+                out_stream.write(str(count) + ", " + str(new_scenario) + "\n")
 
 
 def main_analyse(in_stream, out_stream):
