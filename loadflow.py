@@ -175,8 +175,8 @@ class Loadflow(object):
         try:
             self.lfgenerator(proc.stdin, sample)
         except Error, e:
-            print str(e)
-            return (False, e.msg)
+            # remove `,` from message
+            return (False, ''.join(c for c in e.msg if c not in ','))
 
         so, se = proc.communicate()
 
