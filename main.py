@@ -130,6 +130,9 @@ def main_test(out_stream):
     batch_string += "1, bus-gen, None, , 1.0, 101\n"    # remove 1 bus with generators attached
     batch_string += "1, bus-slack, None, , 1.0, 113\n"  # remove slack bus and all slack generators
     batch_string += "1, bus-island, None, , 1.0, 208\n" # remove bus that causes island
+    batch_string += "1, high-load, None, , 1.10\n"      # load power high
+    batch_string += "1, over-max, None, , 1.15\n"       # load power above max gen power
+
 
     in_stream = StringIO(batch_string)
     
@@ -138,10 +141,15 @@ def main_test(out_stream):
 
     for count, scenario in stream_scenario_generator(in_stream):
         intermediate_file = open(scenario.scenario_type + ".csv", "w")
-        loadflow.lfgenerator(intermediate_file, scenario)
-        intermediate_file.close()
 
-        result, result_reason = loadflow.simulate(scenario)
+        try:
+            loadflow.lfgenerator(intermediate_file, scenario)
+            result, result_reason = loadflow.simulate(scenario)
+        except Exception, e:
+            # remove `,` from message
+            result, result_reason = (False, ''.join(c for c in str(e) if c not in ','))
+
+        intermediate_file.close()
         scenario.result = result
         scenario.result_reason = result_reason
         out_stream.write(str(count) + ", " + str(scenario) + "\n")
