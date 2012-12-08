@@ -189,6 +189,9 @@ class Loadflow(object):
             try:
                 self.lfgenerator(proc.stdin, sample)
             except Error, e:
+                # stop the comms
+                proc.kill()
+                outs, errs = proc.communicate()
                 # remove `,` from message
                 return (False, ''.join(c for c in e.msg if c not in ','))
 
@@ -229,7 +232,10 @@ class Loadflow(object):
                 return (False, "component out of limits")
 
         except Exception, e:
-            return (False, "other error")
+            # stop the comms
+            proc.kill()
+            outs, errs = proc.communicate()
+            return (False, "other error " + ''.join(c for c in e.msg if c not in ','))
 
 
 #==============================================================================
