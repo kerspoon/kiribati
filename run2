@@ -1,0 +1,27 @@
+#!/bin/sh
+
+cp out100.csv outage-result.csv
+
+echo "---- generate ----"
+
+python2 main.py n-x 1 < outage-result.csv > nx-combi.csv
+echo "generate n-1 done"
+
+echo "---- simulate ----"
+
+python2 main.py simulate < nx-combi.csv > nx-result.csv
+echo "simulate n-1 done"
+
+echo "---- analyse ----"
+
+python2 main.py analyse < nx-result.csv > nx-analysis.csv
+
+
+
+python2 main.py n-x 2 < outage-result.csv > nx2-combi.csv
+echo "generate n-2 done"
+
+python2 main.py simulate < nx2-combi.csv > nx2-result.csv
+echo "simulate n-2 done"
+
+python2 main.py analyse < nx2-result.csv > nx2-analysis.csv
