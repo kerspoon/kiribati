@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 import csv
-import sys 
+import sys
 import os
 from StringIO import StringIO
 from scenario import outage_scenario_generator, failure_scenario_generator, output_scenario, generate_n_unique, stream_scenario_generator, combine_scenarios, scenario_from_csv, n_minus_x_generator
 from limits import Limits
 from loadflow import Loadflow
 from misc import as_csv, grem
+import pstats
 
 
 def main_outage(num, out_stream):
@@ -111,7 +112,7 @@ def main_analyse(in_stream, out_stream):
 
 
 def main_test(out_stream):
-    """print the results and the intermediate file for 
+    """print the results and the intermediate file for
        a number of interesting scenarios. So we can check
        by hand if the intermediate file generator and the
        simulator are doing the correct thing.
@@ -135,7 +136,7 @@ def main_test(out_stream):
 
 
     in_stream = StringIO(batch_string)
-    
+
     limits = Limits(open("rts.lim"))
     loadflow = Loadflow(open("rts.lf"), limits)
 
@@ -155,10 +156,10 @@ def main_test(out_stream):
         out_stream.write(str(count) + ", " + str(scenario) + "\n")
 
 
-def main ():
+def main():
     from optparse import OptionParser
 
-    parser = OptionParser("e.g. python main.py [test, clean, analyse, simulate, outage, failure, n-x]", 
+    parser = OptionParser("e.g. python main.py [test, clean, analyse, simulate, outage, failure, n-x]",
                           version="1-Oct-09 by James Brooks")
     (options, args) = parser.parse_args()
 
@@ -212,13 +213,21 @@ def main ():
     elif args[0] == 'clean':
         retval = 0
         grem(".", r".*\.pyc")
+        grem(".", r".*\.prof")
         grem(".", r".*\.csv")
+
+    elif args[0] == 'profile':
+        retval = 0
+        if len(args) != 2:
+            p = pstats.Stats('profile.prof')
+        else:
+            p = pstats.Stats(args[1])
+        p.strip_dirs().sort_stats('time').print_stats()
 
     else:
         parser.error("expected [outage, simulate, failure] got " + str(args[0]))
-    
+
     sys.exit(retval)
 
 if __name__ == "__main__":
     main()
-
