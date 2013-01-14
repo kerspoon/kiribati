@@ -114,11 +114,7 @@ class Loadflow(object):
                 if item not in buskill:
                     newslackbus = item
                     break
-            if newslackbus == None:
-                # print "failed to find a replacement slackbus"
-                # print "guess I have to just ignore it"
-                # print "it will fail the simulation"
-                pass
+            Ensure(newslackbus != None, "failed to find a replacement slackbus")
 
         # fix power mismatch
         names = {}
@@ -128,21 +124,29 @@ class Loadflow(object):
         min_limit = []
         max_limit = []
 
+        unscheduleable = ["G23", "G56", "G89"]
+        total_gen_power = 0
+        total_unscheduleable_gen = 0
+
         for name, value in self.busbars.items():
             if name not in killlist:
                 if value[3].strip() != "":
-                    names[name] = len(powers)
-                    powers.append(float(value[3]))
-                    min_limit.append(0)  # no minimum level for a generator
-                    max_limit.append(float(self.limits_checker.gen_limit[name]))
+                    total_gen_power += float(value[3])
+                    if name not in unscheduleable:
+                        names[name] = len(powers)
+                        powers.append(float(value[3]))
+                        min_limit.append(0)  # no minimum level for a generator
+                        max_limit.append(float(self.limits_checker.gen_limit[name]))
+                    else:
+                        total_unscheduleable_gen += float(value[3])
                 if value[7].strip() != "":
                     load_powers.append(float(value[7]))
 
         # mismatch is sum(load_power) + line_losses - sum(gen_power) after: fix mismatch, bus_level and killed.
-        mismatch = (sum(load_powers) * scenario.bus_level) + self.line_losses - sum(powers)
+        mismatch = (sum(load_powers) * scenario.bus_level) + self.line_losses - total_gen_power
         fixed_powers = fix_mismatch(mismatch, powers, min_limit, max_limit)
         # line for `main.py test` to check with notes.
-        # print "mismatch", 8550 - (sum(load_powers) * scenario.bus_level), 8997.9-sum(fixed_powers)
+        # print "mismatch", 8550 - (sum(load_powers) * scenario.bus_level), 8997.9 - sum(fixed_powers) - total_unscheduleable_gen
 
         # ignore everything in killlist, print the rest
         for (name, value) in self.busbars.items():
