@@ -1,43 +1,42 @@
 #! /usr/bin/env python
 
 import csv
-import string
 import StringIO
 import subprocess
-import sys 
 import unittest
 
-from misc import EnsureEqual, Ensure, EnsureNotEqual, EnsureIn, Error
+from misc import EnsureEqual, Ensure, EnsureNotEqual, Error
 from modifiedtestcase import ModifiedTestCase
 
-"""start with a sample, create a stream to put into loadflow.exe, 
-run the loadflow, analyse the output stream to see if it is an 
-acceptable system. return result,description. where result is 
+"""start with a sample, create a stream to put into loadflow.exe,
+run the loadflow, analyse the output stream to see if it is an
+acceptable system. return result,description. where result is
 zero for success and description is a text block."""
 
 # we could since there arn't that many save the tests that fail to a file!
+
 
 class Loadflow(object):
     """Read in a loadflow file"""
 
     def __init__(self, loadflowstream, limits_checker):
-        self.busbars  = {}
+        self.busbars = {}
         self.branches = {}
         self.limits_checker = limits_checker
 
         self.line_losses = 0
-        
-        x = 0 # enumerate would mess up on comment lines 
+
+        x = 0  # enumerate would mess up on comment lines
         for row in csv.reader(loadflowstream):
             if len(row) == 0 or row[0][0] == '#':
                 continue
             x += 1
-            if x == 1 :
+            if x == 1:
                 self.title = row[0]
-            elif x == 2 :
+            elif x == 2:
                 numbus = int(row[0])
                 self.header = row
-            elif x < numbus+3:
+            elif x < numbus + 3:
                 busname = row[2].strip()
                 self.busbars[busname] = row
 
@@ -51,7 +50,7 @@ class Loadflow(object):
                 self.branches[branchname] = row
 
     def lfgenerator(self, output, scenario):
-        """from the loadflow kill everything in the killlist 
+        """from the loadflow kill everything in the killlist
         and save resulting loadlow to writer."""
 
         # 1. find all in the set killlist & loadflow.branches.keys
@@ -64,13 +63,13 @@ class Loadflow(object):
         allbusses = set(self.busbars.keys())
 
         branchkill = allbranches & killlist
-        buskill    = allbusses & killlist
+        buskill = allbusses & killlist
         assert(branchkill | buskill == killlist)
 
         # kill lines on dead busbars
         deadlines = []
-        for (name,value) in self.branches.items():
-            if name in branchkill or value[4].strip() in buskill or value[5].strip() in buskill: 
+        for (name, value) in self.branches.items():
+            if name in branchkill or value[4].strip() in buskill or value[5].strip() in buskill:
                 deadlines += [name]
         deadlines = set(deadlines)
 
@@ -96,11 +95,11 @@ class Loadflow(object):
         csvwriter.writerow([self.title])
 
         # remembering to change the number of bus and line
-        numbus  = int(self.header[0]) - len(buskill)
+        numbus = int(self.header[0]) - len(buskill)
         numline = int(self.header[1]) - len(branchkill)
         csvwriter.writerow([numbus, numline] + self.header[2:])
 
-        # make sure there is a slack bus 
+        # make sure there is a slack bus
         newslackbus = None
 
         def is_slack_bus(busline):
@@ -111,15 +110,15 @@ class Loadflow(object):
         slackbus = slackbuslines[0][2].strip()
 
         if slackbus in buskill:
-            for item in ["G13","G14"]:
+            for item in ["G13", "G14"]:
                 if item not in buskill:
-                    newslackbus = item 
+                    newslackbus = item
                     break
             if newslackbus == None:
                 # print "failed to find a replacement slackbus"
                 # print "guess I have to just ignore it"
                 # print "it will fail the simulation"
-                pass 
+                pass
 
         # fix power mismatch
         names = {}
@@ -134,7 +133,7 @@ class Loadflow(object):
                 if value[3].strip() != "":
                     names[name] = len(powers)
                     powers.append(float(value[3]))
-                    min_limit.append(0) # no minimum level for a generator
+                    min_limit.append(0)  # no minimum level for a generator
                     max_limit.append(float(self.limits_checker.gen_limit[name]))
                 if value[7].strip() != "":
                     load_powers.append(float(value[7]))
@@ -168,8 +167,8 @@ class Loadflow(object):
                     csvwriter.writerow(["2"] + new_value[1:])
 
         # same with the branches
-        # remember to kill lines on dead busbars 
-        for (name,value) in self.branches.items():
+        # remember to kill lines on dead busbars
+        for (name, value) in self.branches.items():
             if name not in branchkill:
                 if value[4].strip() not in buskill and value[5].strip() not in buskill:
                     csvwriter.writerow(value)
@@ -178,7 +177,7 @@ class Loadflow(object):
         return self.limits_checker.check(output)
 
     def simulate(self, sample):
-        try: 
+        try:
             proc = subprocess.Popen('./loadflow -i10000 -t -y',
                                     shell=True,
                                     stdout=subprocess.PIPE,
@@ -197,7 +196,6 @@ class Loadflow(object):
 
             so, se = proc.communicate()
 
-
             # print "\n\n\nSE\n\n\n"
             # print se
 
@@ -215,15 +213,15 @@ class Loadflow(object):
                 ok &= err_lines[2].startswith("Jacobian Matrix:")
                 ok &= err_lines[3].startswith("Best Maximum Mismatch :")
                 if not ok:
-                    return (False,"unexpected 4: " + errstart)
+                    return (False, "unexpected 4: " + errstart)
             else:
                 if len(err_lines) == 1 and errstart.startswith("error: no slack bus defined"):
-                    return (False,"no slack bus")
+                    return (False, "no slack bus")
                 if len(err_lines) >= 1 and errstart.startswith("warning 1: stop - divergence"):
-                    return (False,"divergence")
+                    return (False, "divergence")
                 if len(err_lines) >= 1 and errstart.startswith("error: zero diagonal element"):
-                    return (False,"islanded")
-                return (False,"unexpected: " + errstart)
+                    return (False, "islanded")
+                return (False, "unexpected: " + errstart)
 
             res = self.check_limits(StringIO.StringIO(so))
             if res == 0:
@@ -246,7 +244,7 @@ class Loadflow(object):
 def fix_mismatch(mismatch, power, min_limit, max_limit):
     """
     func fix_mismatch :: Real, [Real], [Real], [Real] -> [Real]
-    
+
     change the total generated power by `mismatch`.
     Do this based upon current power of each generator
     taking into account its limits.
@@ -258,10 +256,10 @@ def fix_mismatch(mismatch, power, min_limit, max_limit):
 
     if mismatch == 0:
         return power
-    
+
     done = [False for _ in range(len(power))]
     result = [0.0 for _ in range(len(power))]
-     
+
     def find_limit_max(m):
         """find the index of the first generator that will
         be limited. or None """
@@ -269,7 +267,7 @@ def fix_mismatch(mismatch, power, min_limit, max_limit):
             if (not done[n]) and (power[n] * m > max_limit[n]):
                 return n
         return None
-     
+
     def find_limit_min(m):
         """find the index of the first generator that will
         be limited. or None """
@@ -279,7 +277,7 @@ def fix_mismatch(mismatch, power, min_limit, max_limit):
         return None
 
     Ensure(sum(min_limit) < sum(power) + mismatch < sum(max_limit),
-           "mismatch of %f is outside limits (%f < %f < %f)" % (mismatch, sum(min_limit), sum(power) + mismatch , sum(max_limit)))
+        "mismatch of %f is outside limits (%f < %f < %f)" % (mismatch, sum(min_limit), sum(power) + mismatch, sum(max_limit)))
 
     # print "mismatch\t%f" % mismatch
     # print "total gen\t%f" % sum(power)
@@ -295,7 +293,6 @@ def fix_mismatch(mismatch, power, min_limit, max_limit):
     # else:
     #     print as_csv([b-a for a,b in zip(power, min_limit)], "\t")
     #     print sum(power) - sum(min_limit)
-        
 
     # deal with each generator that will be limited
     while True:
@@ -305,10 +302,10 @@ def fix_mismatch(mismatch, power, min_limit, max_limit):
 
         total_gen = sum(power[i] for i in range(len(done)) if not done[i])
         EnsureNotEqual(total_gen, 0)
-        
+
         multiplier = 1.0 + (mismatch / total_gen)
 
-        # we shouldn't really care about the miltiplier as long as 
+        # we shouldn't really care about the miltiplier as long as
         # the limits are being met should we?
         Ensure(0 <= multiplier <= 5, "vague sanity check")
 
@@ -331,7 +328,7 @@ def fix_mismatch(mismatch, power, min_limit, max_limit):
             mismatch -= result[idx_gen] - power[idx_gen]
             done[idx_gen] = True
 
-    # deal with all the other generators 
+    # deal with all the other generators
     # knowing that none of them will limit
     for idx in range(len(power)):
         if not done[idx]:
@@ -339,8 +336,8 @@ def fix_mismatch(mismatch, power, min_limit, max_limit):
             result[idx] = power[idx] * multiplier
             mismatch -= result[idx] - power[idx]
             done[idx] = True
-  
-    # check nothing is out of limits 
+
+    # check nothing is out of limits
     for idx in range(len(power)):
         Ensure(power[idx] == 0 or (min_limit[idx] <= power[idx] <= max_limit[idx]),
                "Power (%d) out of limit (%f<=%f<=%f)" % (idx,
@@ -349,7 +346,7 @@ def fix_mismatch(mismatch, power, min_limit, max_limit):
                                                          max_limit[idx]))
     Ensure(mismatch < 0.001, "should be much mismatch left after fixing it")
     Ensure(all(done), "should have fixed everything")
-    
+
     return result
 
 
@@ -367,7 +364,7 @@ class Test_fix_mismatch(ModifiedTestCase):
 
         res = fix_mismatch(0, p_list, min_list, max_list)
         self.assertAlmostEqualList(res, p_list)
-      
+
     def test_2(self):
         p_list = [1, 1]
         max_list = [2, 2]
