@@ -124,7 +124,7 @@ class Loadflow(object):
         min_limit = []
         max_limit = []
 
-        unscheduleable = ["G23", "G56", "G89"]
+        unscheduleable = []
         total_gen_power = 0
         total_unscheduleable_gen = 0
 
