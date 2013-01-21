@@ -35,35 +35,52 @@ daily = dict(
     Saturday=77,
     Sunday=75)
 
+
 def weekend(day):
     return day == "Saturday" or day == "Sunday"
+
 
 def weekday(day):
     return not weekend(day)
 
+
 def summer(week):
     return 17 <= week <= 29
+
 
 def winter(week):
     return 0 <= week <= 7 or 43 <= week <= 51
 
+
 def spring(week):
     return 8 <= week <= 16
+
 
 def autumn(week):
     return 30 <= week <= 42
 
+
 def weektype(day):
-    if weekend(day): return "weekend"
-    if weekday(day): return "weekday"
-    else: raise Error("day (%s) is not a weekday or weekend?!" % str(day))
+    if weekend(day):
+        return "weekend"
+    if weekday(day):
+        return "weekday"
+    else:
+        raise Error("day (%s) is not a weekday or weekend?!" % str(day))
+
 
 def season(week):
-    if spring(week): return "spring"
-    if summer(week): return "summer"
-    if autumn(week): return "autumn"
-    if winter(week): return "winter"
-    else: raise Error("week (%s) is not a proper season?!" % str(week))
+    if spring(week):
+        return "spring"
+    if summer(week):
+        return "summer"
+    if autumn(week):
+        return "autumn"
+    if winter(week):
+        return "winter"
+    else:
+        raise Error("week (%s) is not a proper season?!" % str(week))
+
 
 hourly_winter = dict(
     weekday=[67, 63, 60, 59, 59, 60, 74, 86, 95, 96, 96, 95, 95, 95, 93, 94, 99, 100, 100, 96, 91, 83, 73, 63],
@@ -87,17 +104,21 @@ hourly = dict(
     autumn=hourly_autumn,
     winter=hourly_winter)
 
+
 def forecast_load(week, day, hour):
     """returns the peak load as a percentage of annual value"""
-    if not (0 <= week <= 51): raise Error("week (%s) is out of bounds" % str(week))
-    if not (0 <= hour <= 23): raise Error("hour (%s) is out of bounds" % str(hour))
-    
-    m1 = weekly[week] 
+    if not (0 <= week <= 51):
+        raise Error("week (%s) is out of bounds" % str(week))
+    if not (0 <= hour <= 23):
+        raise Error("hour (%s) is out of bounds" % str(hour))
+
+    m1 = weekly[week]
     m2 = daily[day]
     m3 = hourly[season(week)][weektype(day)][hour]
     m = (m1 * m2 * m3) / (100.0 * 100.0 * 100.0)
-    # print m1, m2, m3, m 
+    # print m1, m2, m3, m
     return m
+
 
 def actual_load(week, day, hour):
     mu = forecast_load(week, day, hour)
@@ -105,28 +126,35 @@ def actual_load(week, day, hour):
     load_level = random.normalvariate(mu, sigma)
     return load_level
 
+
 def actual_load2(forecast):
     mu = forecast
     sigma = mu * 0.05
     load_level = random.normalvariate(mu, sigma)
     return load_level
 
+
 # randint(self, a, b)  Return random integer in range [a, b], including both end points.
 
 def random_day():
     return random.choice(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
 
+
 def random_week():
     return random.randint(0, 51)
+
 
 def random_hour():
     return random.randint(0, 23)
 
+
 def random_bus_forecast():
     return forecast_load(random_week(), random_day(), random_hour())
 
+
 def quantised_01(val):
     return round(val, 2)
+
 
 def quantised_05(x):
     val = 0.05
@@ -140,6 +168,7 @@ class Tester_quantised(ModifiedTestCase):
         self.assertEqual(quantised_01(0.0049), 0.00)
         self.assertEqual(quantised_01(0.0149), 0.01)
         self.assertEqual(quantised_01(0.9999), 1.00)
+
     def test_05(self):
         self.assertEqual(quantised_05(0.00), 0.00)
         self.assertEqual(quantised_05(0.005), 0.00)
@@ -150,7 +179,7 @@ class Tester_quantised(ModifiedTestCase):
         self.assertEqual(quantised_05(0.0249), 0.00)
         self.assertEqual(quantised_05(0.0749), 0.05)
         # self.assertEqual(quantised_05(0.0750), 0.10) # float bug? :(
-        self.assertEqual(quantised_05(0.0751), 0.10) # this works
+        self.assertEqual(quantised_05(0.0751), 0.10)  # this works
 
         self.assertEqual(quantised_05(0.9999), 1.00)
 
@@ -160,33 +189,33 @@ def examples():
         print "forecast", forecast
         for x in range(10):
             print "actual", x, "=", actual_load2(forecast)
-        print 
+        print
     inner(forecast_load(0, "Monday", 0))
     inner(forecast_load(0, "Sunday", 0))
     inner(forecast_load(51, "Sunday", 23))
     inner(forecast_load(37, "Tuesday", 12))
-    inner(forecast_load(37, "Sunday", 5)) # probably lowest
-    inner(forecast_load(50, "Tuesday", 17)) # probably highest
+    inner(forecast_load(37, "Sunday", 5))  # probably lowest
+    inner(forecast_load(50, "Tuesday", 17))  # probably highest
 
     for _ in range(3):
         inner(forecast_load(random_week(), random_day(), random_hour()))
-    
+
     print "-----"
     act = [forecast_load(random_week(), random_day(), random_hour()) for _ in range(10000)]
     print "Random Forecast"
-    print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act) 
+    print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act)
     print act[:20]
 
     print "-----"
     act = [actual_load(random_week(), random_day(), random_hour()) for _ in range(10000)]
     print "Random Actual"
-    print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act) 
+    print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act)
     print act[:20]
 
     print "-----"
     act = [actual_load2(1.0) for _ in range(10000)]
     print "Normal Distribution"
-    print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act) 
+    print "min =", min(act), "avg =", sum(act) / len(act), "max =", max(act), "len =", len(act)
     print act[:20]
 
     print "-----"
@@ -242,6 +271,7 @@ class Tester_Weekstuff(ModifiedTestCase):
         self.assertAlmostEqual(forecast_load(51, "Sunday", 23), 0.578, 3)
         self.assertAlmostEqual(forecast_load(37, "Tuesday", 12), 0.646, 3)
 
+
 def show_all():
     from misc import as_csv
     weeks = range(52)
@@ -263,10 +293,11 @@ def show_year_by_week():
     weeks = range(52)
     days = "Monday Tuesday Wednesday Thursday Friday Saturday Sunday".split()
     hour = 7
-    
+
     for week in weeks:
         weekly = [forecast_load(week, day, hour) for day in days]
         print as_csv([week] + weekly, "\t")
+
 
 def show_day():
     from misc import as_csv
@@ -282,4 +313,3 @@ if __name__ == '__main__':
     # examples()
     unittest.main()
     # show_day()
-

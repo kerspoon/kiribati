@@ -5,6 +5,7 @@ import random
 import sys
 from misc import Ensure
 
+
 class ModifiedTestCase(unittest.TestCase):
     def assertRaisesEx(self, exception, callable, *args, **kwargs):
         if "exc_args" in kwargs:
@@ -19,7 +20,7 @@ class ModifiedTestCase(unittest.TestCase):
             exc_pattern = None
 
         argv = [repr(a) for a in args]\
-               + ["%s=%r" % (k, v)  for k, v in kwargs.items()]
+               + ["%s=%r" % (k, v) for k, v in kwargs.items()]
         callsig = "%s(%s)" % (callable.__name__, ", ".join(argv))
 
         try:
@@ -54,25 +55,31 @@ class ModifiedTestCase(unittest.TestCase):
 class ReadError(Exception):
     pass
 
+
 def ReadAssert(cond, text=None):
-    if not cond: 
+    if not cond:
         raise ReadError(text)
+
 
 # mockfile :: str -> filehandler
 def mockfile(text):
     return StringIO.StringIO(text)
 
+
 # rnd_True :: Real(0,1) -> Bool
 def rnd_True(_):
     return True
+
 
 # rnd_False :: Real(0,1) -> Bool
 def rnd_False(_):
     return False
 
+
 # rnd_random :: Real(0,1) -> Bool
 def rnd_random(probability):
     return random.random() > probability
+
 
 # Generate_rnd_result :: [Bool] -> (Real(0,1) -> Bool)
 def Generate_rnd_result(seq):
@@ -96,9 +103,10 @@ def Generate_rnd_result(seq):
     this = Inner(seq)
     return this.callme
 
+
 # Generate_rnd_sequence :: [Real(0,1)] -> (Real(0,1) -> Bool)
 def Generate_rnd_sequence(seq):
-    """a fake random number generator, uses the input sequence as the 
+    """a fake random number generator, uses the input sequence as the
     'random' numbers."""
 
     class Inner:
@@ -114,17 +122,20 @@ def Generate_rnd_sequence(seq):
     this = Inner(seq)
     return this.callme
 
+
 class Test_Generate_rnd_result(ModifiedTestCase):
     def test1(self):
         seq = [x == 't' for x in list("tftftttfttftffttt")]
         rnd = Generate_rnd_result(seq)
         for x in seq:
             self.assertEqual(rnd(.5), x)
+
     def test2(self):
         seq = [True]
         rnd = Generate_rnd_result(seq)
         self.assertEqual(rnd(.5), True)
         self.assertRaisesEx(IndexError, rnd, .5, exc_args=(("list index out of range",)))
+
 
 class Test_Generate_rnd_sequence(ModifiedTestCase):
 
@@ -154,4 +165,3 @@ class Test_Generate_rnd_sequence(ModifiedTestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

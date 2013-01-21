@@ -15,32 +15,39 @@ See also: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66463
 See also: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66465
 """
 
+
 # ---------------------------------------------------------------------------- #
 # combinations :: [T], int -> ([T])
 def combinations(items, n):
-    if n==0: yield []
+    if n == 0:
+        yield []
     else:
         for i in xrange(len(items)):
-            for cc in combinations(items[:i]+items[i+1:],n-1):
-                yield [items[i]]+cc
+            for cc in combinations(items[:i] + items[i + 1:], n - 1):
+                yield [items[i]] + cc
+
 
 # ---------------------------------------------------------------------------- #
 # uniqueCombinations :: [T], int -> ([T])
 def uniqueCombinations(items, n):
-    if n==0: yield []
+    if n == 0:
+        yield []
     else:
         for i in xrange(len(items)):
-            for cc in uniqueCombinations(items[i+1:],n-1):
-                yield [items[i]]+cc
+            for cc in uniqueCombinations(items[i + 1:], n - 1):
+                yield [items[i]] + cc
+
 
 # ---------------------------------------------------------------------------- #
 # selections :: [T], int -> ([T])
 def selections(items, n):
-    if n==0: yield []
+    if n == 0:
+        yield []
     else:
         for i in xrange(len(items)):
-            for ss in selections(items, n-1):
-                yield [items[i]]+ss
+            for ss in selections(items, n - 1):
+                yield [items[i]] + ss
+
 
 # ---------------------------------------------------------------------------- #
 # permutations :: [T] -> ([T])
@@ -53,19 +60,23 @@ def permutations(items):
 
 def examples():
     print "Permutations of 'love'"
-    for p in permutations(['l','o','v','e']): print ''.join(p)
+    for p in permutations(['l', 'o', 'v', 'e']):
+        print ''.join(p)
 
     print
     print "Combinations of 2 letters from 'love'"
-    for c in combinations(['l','o','v','e'],2): print ''.join(c)
+    for c in combinations(['l', 'o', 'v', 'e'], 2):
+        print ''.join(c)
 
     print
     print "Unique Combinations of 2 letters from 'love'"
-    for uc in uniqueCombinations(['l','o','v','e'],2): print ''.join(uc)
+    for uc in uniqueCombinations(['l', 'o', 'v', 'e'], 2):
+        print ''.join(uc)
 
     print
     print "Selections of 2 letters from 'love'"
-    for s in selections(['l','o','v','e'],2): print ''.join(s)
+    for s in selections(['l', 'o', 'v', 'e'], 2):
+        print ''.join(s)
 
     print
     print map(''.join, list(permutations('done')))

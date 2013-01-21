@@ -1,9 +1,7 @@
 #! /usr/bin/env python
-import csv
 import sys
-import os
 from StringIO import StringIO
-from scenario import outage_scenario_generator, failure_scenario_generator, output_scenario, generate_n_unique, stream_scenario_generator, combine_scenarios, scenario_from_csv, n_minus_x_generator
+from scenario import outage_scenario_generator, failure_scenario_generator, output_scenario, generate_n_unique, stream_scenario_generator, combine_scenarios, n_minus_x_generator
 from limits import Limits
 from loadflow import Loadflow
 from misc import as_csv, grem
@@ -39,7 +37,6 @@ def main_n_minus_x(x, no_input, in_stream, out_stream):
             for count, fail_scenario in fail_batch:
                 new_scenario = combine_scenarios(base_scenario, fail_scenario)
                 out_stream.write(str(count) + ", " + str(new_scenario) + "\n")
-
 
 
 def main_simulate(in_stream, out_stream):
@@ -85,10 +82,10 @@ def main_analyse(in_stream, out_stream):
     pfail = []
 
     def output_group_stats(grp):
-        group_size = sum(c for c,s in grp)
-        failures = float(sum(c for c,s in grp if s.result is False))
-        pfail.append(failures/group_size)
-        out_stream.write(as_csv([failures, group_size, failures/group_size], ", ") + "\n")
+        group_size = sum(c for c, s in grp)
+        failures = float(sum(c for c, s in grp if s.result is False))
+        pfail.append(failures / group_size)
+        out_stream.write(as_csv([failures, group_size, failures / group_size], ", ") + "\n")
 
     for count, scenario in stream_scenario_generator(in_stream):
         if scenario.scenario_type == "outage" or scenario.scenario_type == "base":
@@ -108,7 +105,7 @@ def main_analyse(in_stream, out_stream):
     out_stream.write("\n")
     out_stream.write("min , " + str(min(pfail)) + "\n")
     out_stream.write("max , " + str(max(pfail)) + "\n")
-    out_stream.write("avg , " + str(sum(pfail)/len(pfail)) + "\n")
+    out_stream.write("avg , " + str(sum(pfail) / len(pfail)) + "\n")
 
 
 def main_test(out_stream):
@@ -119,21 +116,20 @@ def main_test(out_stream):
     """
 
     batch_string = ""
-    batch_string += "1, base, None, , 1.0\n"            # base - as normal
-    batch_string += "1, half, None, , 0.5\n"            # half load power
-    batch_string += "1, tenth, None, , 0.1\n"           # tenth load power
-    batch_string += "1, island, None, , 1.0, B11\n"     # island
-    batch_string += "1, slack, None, , 1.0, G12\n"      # removed 1 slack bus
+    batch_string += "1, base, None, , 1.0\n"             # base - as normal
+    batch_string += "1, half, None, , 0.5\n"             # half load power
+    batch_string += "1, tenth, None, , 0.1\n"            # tenth load power
+    batch_string += "1, island, None, , 1.0, B11\n"      # island
+    batch_string += "1, slack, None, , 1.0, G12\n"       # removed 1 slack bus
     batch_string += "1, slack-all, None, , 1.0, G12, G13, G14\n"  # removed all slack busses
-    batch_string += "1, line, None, , 1.0, A2\n"        # remove 1 line
-    batch_string += "1, gen, None, , 1.0, G24\n"        # remove 1 generator
-    batch_string += "1, bus, None, , 1.0, 104\n"        # remove 1 bus without generators
-    batch_string += "1, bus-gen, None, , 1.0, 101\n"    # remove 1 bus with generators attached
-    batch_string += "1, bus-slack, None, , 1.0, 113\n"  # remove slack bus and all slack generators
-    batch_string += "1, bus-island, None, , 1.0, 208\n" # remove bus that causes island
-    batch_string += "1, high-load, None, , 1.10\n"      # load power high
-    batch_string += "1, over-max, None, , 1.15\n"       # load power above max gen power
-
+    batch_string += "1, line, None, , 1.0, A2\n"         # remove 1 line
+    batch_string += "1, gen, None, , 1.0, G24\n"         # remove 1 generator
+    batch_string += "1, bus, None, , 1.0, 104\n"         # remove 1 bus without generators
+    batch_string += "1, bus-gen, None, , 1.0, 101\n"     # remove 1 bus with generators attached
+    batch_string += "1, bus-slack, None, , 1.0, 113\n"   # remove slack bus and all slack generators
+    batch_string += "1, bus-island, None, , 1.0, 208\n"  # remove bus that causes island
+    batch_string += "1, high-load, None, , 1.10\n"       # load power high
+    batch_string += "1, over-max, None, , 1.15\n"        # load power above max gen power
 
     in_stream = StringIO(batch_string)
 
