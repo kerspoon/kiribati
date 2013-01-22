@@ -1,36 +1,15 @@
-#! /bin/bash
+#!/bin/bash
 
+python main.py clean
 python main.py outage 100 > out100.csv
 
-python main.py failure 1 < out100.csv > fail1.csv
+for i in 1 5 10 50 100 500 1000 5000 10000 50000 100000
+do
+    echo "Process $i"
+    python main.py failure $i < out100.csv > fail$i.csv
+    python main.py simulate < fail$i.csv > sim$i.csv
+    python main.py analyse < sim$i.csv > analysis$i.csv
+done
 
-
-python main.py failure 5 < out100.csv > fail5.csv
-
-
-python main.py failure 10 < out100.csv > fail10.csv
-
-
-python main.py failure 50 < out100.csv > fail50.csv
-
-
-python main.py failure 100 < out100.csv > fail100.csv
-
-
-python main.py failure 500 < out100.csv > fail500.csv
-
-
-python main.py failure 1000 < out100.csv > fail1000.csv
-
-
-python main.py failure 5000 < out100.csv > fail5000.csv
-
-
-python main.py failure 10000 < out100.csv > fail10000.csv
-
-
-python main.py failure 50000 < out100.csv > fail50000.csv
-
-
-python main.py failure 100000 < out100.csv > fail100000.csv
-
+echo "All Finished"
+exit 0
