@@ -114,7 +114,7 @@ class Loadflow(object):
                 if item not in buskill:
                     newslackbus = item
                     break
-            Ensure(newslackbus != None, "failed to find a replacement slackbus")
+            Ensure(newslackbus is not None, "failed to find a replacement slackbus")
 
         # fix power mismatch
         names = {}
@@ -124,7 +124,11 @@ class Loadflow(object):
         min_limit = []
         max_limit = []
 
-        unscheduleable = []
+        unscheduleable = ["G3", "G7", "G9", "G16", "G25", "G31", "G67", "G73", "G75", "G82", "G91", "G97"]
+
+        # unscheduleable = ["G3", "G7", "G9", "G16", "G25", "G31", "G67", "G73", "G75", "G82", "G91", "G97",
+        #   "G4", "G8", "G10", "G17", "G26", "G32", "G68", "G74", "G76", "G83", "G92", "G98"]
+
         total_gen_power = 0
         total_unscheduleable_gen = 0
 
@@ -281,7 +285,8 @@ def fix_mismatch(mismatch, power, min_limit, max_limit):
         return None
 
     Ensure(sum(min_limit) < sum(power) + mismatch < sum(max_limit),
-        "mismatch of %f is outside limits (%f < %f < %f)" % (mismatch, sum(min_limit), sum(power) + mismatch, sum(max_limit)))
+           "mismatch of %f is outside limits (%f < %f < %f)" % (
+               mismatch, sum(min_limit), sum(power) + mismatch, sum(max_limit)))
 
     # print "mismatch\t%f" % mismatch
     # print "total gen\t%f" % sum(power)
