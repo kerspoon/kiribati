@@ -108,17 +108,18 @@ class Scenario:
 
 class TestRead(ModifiedTestCase):
 
-    def util_readwrite_match(self, inp):
+    def util_readwrite_match(self, inpa, inpb):
+        inp = inpa + ", " + ", ".join(["1.0"]*windlevel.num_wind) + ", " + inpb
         batch = list(input_scenario(StringIO(inp)))
         stream = StringIO()
         output_scenario(batch, stream)
         self.assertEqual(stream.getvalue(), inp)
 
     def test_1(self):
-        self.util_readwrite_match("""1, outage, False, bad, 0.55, G49, G32, G22, G12\n""")
-        self.util_readwrite_match("""999, failure, True, ok, 1.0\n""")
-        self.util_readwrite_match("""999, combined, None, ok, 0.01, A1\n""")
-        self.util_readwrite_match("""1, combined, False, component out of limits, 0.525, G31, G66\n""")
+        self.util_readwrite_match("1, outage, False, bad, 0.55", "G49, G32, G22, G12\n")
+        self.util_readwrite_match("999, failure, True, ok, 1.0", "\n")
+        self.util_readwrite_match("999, combined, None, ok, 0.01", "A1\n")
+        self.util_readwrite_match("1, combined, False, component out of limits, 0.525", "G31, G66\n")
 
 #==============================================================================
 #

@@ -115,6 +115,9 @@ def main_test(out_stream):
        simulator are doing the correct thing.
     """
 
+    # these have not been modified to cope with the wind generators
+    # I'm not changing it as it wont help in testing which is what
+    # this code is for
     batch_string = ""
     batch_string += "1, base, None, , 1.0\n"             # base - as normal
     batch_string += "1, half, None, , 0.5\n"             # half load power
