@@ -133,14 +133,18 @@ class Loadflow(object):
         for name, value in self.busbars.items():
             if name not in killlist:
                 if value[3].strip() != "":
-                    total_gen_power += float(value[3])
                     if name not in unscheduleable:
+                        total_gen_power += float(value[3])
                         names[name] = len(powers)
                         powers.append(float(value[3]))
                         min_limit.append(0)  # no minimum level for a generator
                         max_limit.append(float(self.limits_checker.gen_limit[name]))
                     else:
-                        total_unscheduleable_gen += float(value[3])
+                        gen_id = windlevel.unscheduleable.index(name)
+                        gen_power = float(value[3]) * scenario.wind_levels[gen_id]
+                        total_gen_power += gen_power
+                        total_unscheduleable_gen += gen_power
+
                 if value[7].strip() != "":
                     load_powers.append(float(value[7]))
 
