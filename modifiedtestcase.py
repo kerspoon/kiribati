@@ -51,6 +51,12 @@ class ModifiedTestCase(unittest.TestCase):
         for x, y in zip(list1, list2):
             self.assertAlmostEqual(x, y)
 
+    def assertLessThan(self, thing, other):
+        self.assertTrue(thing < other, str(thing) + " >= " + str(other))
+
+    def assertGreaterThan(self, thing, other):
+        self.assertTrue(thing > other, str(thing) + " <= " + str(other))
+
 
 class ReadError(Exception):
     pass

@@ -7,6 +7,7 @@ import unittest
 
 from misc import EnsureEqual, Ensure, EnsureNotEqual, Error
 from modifiedtestcase import ModifiedTestCase
+import windlevel
 
 """start with a sample, create a stream to put into loadflow.exe,
 run the loadflow, analyse the output stream to see if it is an
@@ -124,10 +125,7 @@ class Loadflow(object):
         min_limit = []
         max_limit = []
 
-        unscheduleable = ["G3", "G7", "G9", "G16", "G25", "G31", "G67", "G73", "G75", "G82", "G91", "G97"]
-
-        # unscheduleable = ["G3", "G7", "G9", "G16", "G25", "G31", "G67", "G73", "G75", "G82", "G91", "G97",
-        #   "G4", "G8", "G10", "G17", "G26", "G32", "G68", "G74", "G76", "G83", "G92", "G98"]
+        unscheduleable = windlevel.unscheduleable
 
         total_gen_power = 0
         total_unscheduleable_gen = 0

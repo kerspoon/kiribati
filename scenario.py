@@ -6,23 +6,36 @@ from modifiedtestcase import ModifiedTestCase
 import unittest
 from StringIO import StringIO
 from combinations import uniqueCombinations
+import windlevel
 
 
 def outage_scenario_generator(net_file):
     outage_generator = sampler.make_outage_generator(sampler.read(net_file))
     for kill_list in outage_generator:
-        yield Scenario("outage", quantised_05(random_bus_forecast()), kill_list)
+        yield Scenario(
+            "outage",
+            quantised_05(random_bus_forecast()),
+            windlevel.random_forecasts(),
+            kill_list)
 
 
 def failure_scenario_generator(net_file):
     sample_generator = sampler.make_sample_generator(sampler.read(net_file))
     for kill_list in sample_generator:
-        yield Scenario("failure", quantised_05(actual_load2(1.0)), kill_list)
+        yield Scenario(
+            "failure",
+            quantised_05(actual_load2(1.0)),
+            windlevel.random_forecast_errors(),
+            kill_list)
 
 
 def n_minus_x_generator(x, net_file):
     for kill_list in uniqueCombinations(sampler.read(net_file).keys(), x):
-        yield 1, Scenario("n-x", 1.0, kill_list)
+        yield 1, Scenario(
+            "n-x",
+            1.0,
+            [1 for _ in range(windlevel.num_wind)],
+            kill_list)
 
 
 def stream_scenario_generator(in_stream):
@@ -47,8 +60,8 @@ def generate_n_unique(generator, num):
 
 def scenario_from_csv(text):
     items = [x.strip() for x in text.split(", ")]
-    # TODO test this
-    scenario = Scenario(items[0], float(items[3]), items[4:])
+    num_wind = windlevel.num_wind
+    scenario = Scenario(items[0], float(items[3]), items[4:(num_wind+4)], items[(num_wind+4):])
     if items[1] == "None":
         scenario.result = None
     else:
@@ -67,21 +80,25 @@ def output_scenario(batch, out_stream):
 
 
 def combine_scenarios(one, other):
-    return Scenario("combined", one.bus_level * other.bus_level, one.kill_list | other.kill_list)
+    wind_levels = [one.wind_levels[x]*other.wind_levels[x] for x in range(len(one.wind_levels))]
+    return Scenario("combined", one.bus_level * other.bus_level, wind_levels, one.kill_list | other.kill_list)
 
 
 class Scenario:
     """one possible state a base case could be in"""
 
-    def __init__(self, scenario_type, bus_level, kill_list):
+    def __init__(self, scenario_type, bus_level, wind_levels, kill_list):
         self.scenario_type = scenario_type
         self.result = None
         self.result_reason = ""
         self.bus_level = bus_level
+        self.wind_levels = wind_levels
         self.kill_list = frozenset(kill_list)
 
     def __str__(self):
-        return misc.as_csv([self.scenario_type, self.result, self.result_reason, self.bus_level] + list(self.kill_list), ", ")
+        return misc.as_csv(
+            [self.scenario_type, self.result, self.result_reason, self.bus_level] +
+            list(self.wind_levels) + list(self.kill_list), ", ")
 
 
 #==============================================================================
