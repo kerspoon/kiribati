@@ -81,11 +81,14 @@ def main_analyse(in_stream, out_stream):
     group = []
     pfail = []
 
+    current_scenario = None
+
     def output_group_stats(grp):
         group_size = sum(c for c, s in grp)
         failures = float(sum(c for c, s in grp if s.result is False))
         pfail.append(failures / group_size)
-        out_stream.write(as_csv([failures, group_size, failures / group_size], ", ") + "\n")
+        out_stream.write(as_csv([failures, group_size, failures / group_size], ",") + ",")
+        out_stream.write(str(count) + "," + str(current_scenario) + "\n")
 
     for count, scenario in stream_scenario_generator(in_stream):
         if scenario.scenario_type == "outage" or scenario.scenario_type == "base":
@@ -94,7 +97,7 @@ def main_analyse(in_stream, out_stream):
                 group = []
 
             # output base stats of new group
-            out_stream.write(str(count) + ", " + str(scenario) + "\n")
+            current_scenario = scenario
         else:
             group.append((count, scenario))
 
