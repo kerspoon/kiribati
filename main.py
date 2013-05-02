@@ -6,6 +6,7 @@ from limits import Limits
 from loadflow import Loadflow
 from misc import as_csv, grem
 import pstats
+import windlevel
 
 
 def main_outage(num, out_stream):
@@ -118,24 +119,31 @@ def main_test(out_stream):
        simulator are doing the correct thing.
     """
 
-    # these have not been modified to cope with the wind generators
-    # I'm not changing it as it wont help in testing which is what
-    # this code is for
+    def windstr(x):
+        if windlevel.num_wind == 0:
+            return ""
+        return ", " + ", ".join([str(x)]*windlevel.num_wind)
+
     batch_string = ""
-    batch_string += "1, base, None, , 1.0\n"             # base - as normal
-    batch_string += "1, half, None, , 0.5\n"             # half load power
-    batch_string += "1, tenth, None, , 0.1\n"            # tenth load power
-    batch_string += "1, island, None, , 1.0, B11\n"      # island
-    batch_string += "1, slack, None, , 1.0, G12\n"       # removed 1 slack bus
-    batch_string += "1, slack-all, None, , 1.0, G12, G13, G14\n"  # removed all slack busses
-    batch_string += "1, line, None, , 1.0, A2\n"         # remove 1 line
-    batch_string += "1, gen, None, , 1.0, G24\n"         # remove 1 generator
-    batch_string += "1, bus, None, , 1.0, 104\n"         # remove 1 bus without generators
-    batch_string += "1, bus-gen, None, , 1.0, 101\n"     # remove 1 bus with generators attached
-    batch_string += "1, bus-slack, None, , 1.0, 113\n"   # remove slack bus and all slack generators
-    batch_string += "1, bus-island, None, , 1.0, 208\n"  # remove bus that causes island
-    batch_string += "1, high-load, None, , 1.10\n"       # load power high
-    batch_string += "1, over-max, None, , 1.15\n"        # load power above max gen power
+    batch_string += "1, base, None, , 1.0" + windstr(1) + "\n"             # base - as normal
+    batch_string += "1, half, None, , 0.5" + windstr(1) + "\n"             # half load power
+    batch_string += "1, tenth, None, , 0.1" + windstr(1) + "\n"            # tenth load power
+    batch_string += "1, island, None, , 1.0" + windstr(1) + ", B11\n"      # island
+    batch_string += "1, slack, None, , 1.0" + windstr(1) + ", G12\n"       # removed 1 slack bus
+    batch_string += "1, slack-all, None, , 1.0" + windstr(1) + ", G12, G13, G14\n"  # removed all slack busses
+    batch_string += "1, line, None, , 1.0" + windstr(1) + ", A2\n"         # remove 1 line
+    batch_string += "1, gen, None, , 1.0" + windstr(1) + ", G24\n"         # remove 1 generator
+    batch_string += "1, bus, None, , 1.0" + windstr(1) + ", 104\n"         # remove 1 bus without generators
+    batch_string += "1, bus-gen, None, , 1.0" + windstr(1) + ", 101\n"     # remove 1 bus with generators attached
+    batch_string += "1, bus-slack, None, , 1.0" + windstr(1) + ", 113\n"   # remove slack bus and all slack generators
+    batch_string += "1, bus-island, None, , 1.0" + windstr(1) + ", 208\n"  # remove bus that causes island
+    batch_string += "1, high-load, None, , 1.10" + windstr(1) + "\n"       # load power high
+    batch_string += "1, over-max, None, , 1.15" + windstr(1) + "\n"        # load power above max gen power
+
+    if windlevel.num_wind > 0:
+        batch_string += "1, wind-50, None, , 1.0, " + windstr(0.5) + "\n"             # base - wind @ 50%
+        batch_string += "1, wind-10, None, , 1.0, " + windstr(0.1) + "\n"             # base - wind @ 10%
+        batch_string += "1, wind-200, None, , 1.0, " + windstr(2.0) + "\n"             # base - wind @ 200%
 
     in_stream = StringIO(batch_string)
 

@@ -141,7 +141,7 @@ class Loadflow(object):
                         max_limit.append(float(self.limits_checker.gen_limit[name]))
                     else:
                         gen_id = windlevel.unscheduleable.index(name)
-                        gen_power = float(value[3]) * scenario.wind_levels[gen_id]
+                        gen_power = float(value[3]) * float(scenario.wind_levels[gen_id])
                         total_gen_power += gen_power
                         total_unscheduleable_gen += gen_power
 
@@ -171,7 +171,7 @@ class Loadflow(object):
                 # if we have an unscheduleable gen get it's power from the level
                 if name in windlevel.unscheduleable:
                     gen_id = windlevel.unscheduleable.index(name)
-                    new_value[3] = str(float(new_value[3]) * scenario.wind_levels[gen_id])
+                    new_value[3] = str(float(new_value[3]) * float(scenario.wind_levels[gen_id]))
 
                 # print it out
                 # print len(new_value), " ".join(new_value)
