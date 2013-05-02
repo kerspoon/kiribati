@@ -141,9 +141,9 @@ def main_test(out_stream):
     batch_string += "1, over-max, None, , 1.15" + windstr(1) + "\n"        # load power above max gen power
 
     if windlevel.num_wind > 0:
-        batch_string += "1, wind-50, None, , 1.0, " + windstr(0.5) + "\n"             # base - wind @ 50%
-        batch_string += "1, wind-10, None, , 1.0, " + windstr(0.1) + "\n"             # base - wind @ 10%
-        batch_string += "1, wind-200, None, , 1.0, " + windstr(2.0) + "\n"             # base - wind @ 200%
+        batch_string += "1, wind-50, None, , 1.0" + windstr(0.5) + "\n"             # base - wind @ 50%
+        batch_string += "1, wind-10, None, , 1.0" + windstr(0.1) + "\n"             # base - wind @ 10%
+        batch_string += "1, wind-200, None, , 1.0" + windstr(2.0) + "\n"             # base - wind @ 200%
 
     in_stream = StringIO(batch_string)
 
