@@ -248,7 +248,10 @@ class Loadflow(object):
             # stop the comms
             proc.kill()
             outs, errs = proc.communicate()
-            return (False, "other error " + ''.join(c for c in e.msg if c not in ','))
+            try:
+                return (False, "other error " + ''.join(c for c in e.msg if c not in ','))
+            except Exception:
+                return (False, "other error 2 " + ''.join(c for c in str(e) if c not in ','))
 
 
 #==============================================================================
