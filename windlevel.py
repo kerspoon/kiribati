@@ -22,8 +22,8 @@ def gen_forecast():
     choice = random.randint(0, sum(prob_raw)-1)
     for n, cum in enumerate(prob_cum):
         if choice < cum:
-            return n*10+60
-    return 140
+            return (n*10+60)/100
+    return 140/100
 
 
 def random_forecasts():
