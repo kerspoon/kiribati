@@ -1,11 +1,12 @@
 #!/bin/sh
 
 echo "start", $1, $2
+set -e
 
-# python2 main.py clean
-# python2 main.py outage $1 > outage.csv
-# python2 main.py simulate < outage.csv > outage-result.csv
-# echo "outages done"
+python2 main.py clean
+python2 main.py outage $1 > outage.csv
+python2 main.py simulate < outage.csv > outage-result.csv
+echo "outages done"
 
 echo "---- MCS ----"
 
