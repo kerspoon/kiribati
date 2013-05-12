@@ -9,6 +9,12 @@ import pstats
 import windlevel
 
 
+def windstr(x):
+    if windlevel.num_wind == 0:
+        return ""
+    return ", " + ", ".join([str(x)]*windlevel.num_wind)
+
+
 def main_outage(num, out_stream):
     batch = generate_n_unique(outage_scenario_generator(open("rts.net")), num)
     output_scenario(batch, out_stream)
@@ -20,7 +26,7 @@ def main_n_minus_x(x, no_input, in_stream, out_stream):
     # for information print the unmodified base case
     # and the un-combined failures
     if not no_input:
-        out_stream.write("0, base, None, , 1.0\n")
+        out_stream.write("0, base, None, , 1.0" + windstr(1) + "\n")
 
     output_scenario(fail_batch, out_stream)
 
@@ -58,7 +64,7 @@ def main_failure(num, no_input, in_stream, out_stream):
     # for information print the unmodified base case
     # and the un-combined failures
     if not no_input:
-        out_stream.write("0, base, None, , 1.0\n")
+        out_stream.write("0, base, None, , 1.0" + windstr(1) + "\n")
     output_scenario(fail_batch, out_stream)
 
     # if we didn't have a input file then we are done
@@ -118,11 +124,6 @@ def main_test(out_stream):
        by hand if the intermediate file generator and the
        simulator are doing the correct thing.
     """
-
-    def windstr(x):
-        if windlevel.num_wind == 0:
-            return ""
-        return ", " + ", ".join([str(x)]*windlevel.num_wind)
 
     batch_string = ""
     batch_string += "1, base, None, , 1.0" + windstr(1) + "\n"             # base - as normal
