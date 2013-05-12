@@ -80,7 +80,8 @@ def output_scenario(batch, out_stream):
 
 
 def combine_scenarios(one, other):
-    wind_levels = [one.wind_levels[x]*other.wind_levels[x] for x in range(len(one.wind_levels))]
+    wind_levels = [float(one.wind_levels[x])*float(other.wind_levels[x]) for x in range(len(one.wind_levels))]
+    assert windlevel.num_wind == len(wind_levels), "wrong number of wind gens"
     return Scenario("combined", one.bus_level * other.bus_level, wind_levels, one.kill_list | other.kill_list)
 
 
@@ -92,8 +93,9 @@ class Scenario:
         self.result = None
         self.result_reason = ""
         self.bus_level = bus_level
-        self.wind_levels = wind_levels
+        self.wind_levels = [float(x) for x in wind_levels]
         self.kill_list = frozenset(kill_list)
+        assert windlevel.num_wind == len(self.wind_levels), "wrong number of wind gens"
 
     def __str__(self):
         return misc.as_csv(
@@ -108,6 +110,11 @@ class Scenario:
 
 class TestRead(ModifiedTestCase):
 
+    def util_read(self, inpa, inpb):
+        inp = inpa + ", " + ", ".join(["1.0"]*windlevel.num_wind) + ", " + inpb
+        batch = list(input_scenario(StringIO(inp)))
+        return batch
+
     def util_readwrite_match(self, inpa, inpb):
         inp = inpa + ", " + ", ".join(["1.0"]*windlevel.num_wind) + ", " + inpb
         batch = list(input_scenario(StringIO(inp)))
@@ -120,6 +127,13 @@ class TestRead(ModifiedTestCase):
         self.util_readwrite_match("999, failure, True, ok, 1.0", "\n")
         self.util_readwrite_match("999, combined, None, ok, 0.01", "A1\n")
         self.util_readwrite_match("1, combined, False, component out of limits, 0.525", "G31, G66\n")
+
+    def test_combine(self):
+        batch_a = self.util_read("1, outage, False, bad, 4.0", "G2\n")
+        batch_b = self.util_read("1, outage, False, bad, 0.5", "G1\n")
+        scenario = combine_scenarios(batch_a[0][1], batch_b[0][1])
+        expected_result = "combined, None, , 2.0, " + ", ".join(["1.0"]*windlevel.num_wind) + ", G2, G1"
+        self.assertEqual(str(scenario), expected_result)
 
 #==============================================================================
 #
