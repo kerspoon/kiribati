@@ -1,5 +1,5 @@
 import misc
-
+import sys
 from modifiedtestcase import ModifiedTestCase
 import unittest
 from StringIO import StringIO
@@ -59,7 +59,7 @@ def main(infilea, infileb, outfile):
 
     for line in infilea:
         # id, ...rest..
-        items = [x.strip() for x in line.split(", ")]
+        items = [x.strip() for x in line.split(",")]
         scen_id = int(items[0])
         scenario = scenario_from_csv(items[1:])
         summary[scenario] = (scen_id, 0, "NONE", "")
@@ -70,7 +70,7 @@ def main(infilea, infileb, outfile):
     for line in infileb:
         # num-fail, count, type, result, reason, ..rest..
         # 1313  1    outage TRUE     ok 0.7  G17     G85     G4  G13     G10
-        items = [x.strip() for x in line.split(", ")]
+        items = [x.strip() for x in line.split(",")]
 
         num_fail = int(items[0])
         assert 0 <= num_fail <= 10000000
@@ -93,7 +93,7 @@ def main(infilea, infileb, outfile):
         summary[scenario] = info
 
     for scenario, info in summary.items():
-        outfile.write(misc.as_csv(info, ", ") + "\n")
+        outfile.write(misc.as_csv(info, ",") + "\n")
 
 
 #==============================================================================
@@ -133,5 +133,9 @@ class TestRead(ModifiedTestCase):
 #==============================================================================
 
 if __name__ == "__main__":
-    unittest.main()
-    main()
+    if 3 == len(sys.argv):
+        with open(sys.argv[1]) as filea:
+            with open(sys.argv[2]) as fileb:
+                main(filea, fileb, sys.stdout)
+    else:
+        unittest.main()
